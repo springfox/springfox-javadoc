@@ -35,6 +35,8 @@ import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.Tag;
 import com.sun.javadoc.ThrowsTag;
 
+import springfox.javadoc.plugin.JavadocBuilderPlugin;
+
 /**
  * Generate properties file based on Javadoc.
  *
@@ -145,7 +147,9 @@ public class SwaggerPropertiesDoclet {
             root.printNotice("Writing output to " + out);
             File file = new File(out);
             file.getParentFile().mkdirs();
-            try(OutputStream javadoc = new FileOutputStream(file)) {
+            OutputStream javadoc = null;
+            try {
+                javadoc = new FileOutputStream(file);
                 Properties properties = new Properties();
 
                 for(ClassDoc classDoc : root.classes()) {
@@ -160,6 +164,14 @@ public class SwaggerPropertiesDoclet {
                 properties.store(javadoc, "Springfox javadoc properties");
             } catch (IOException e) {
                 root.printError(e.getMessage());
+            } finally {
+                if(javadoc != null) {
+                    try {
+                        javadoc.close();
+                    } catch (IOException e) {
+                        // close for real
+                    }
+                }
             }
         }
         return true;
