@@ -26,7 +26,8 @@ public class SwaggerPropertiesDocletTest {
 
     @Test
     public void testOptionLength() throws IOException {
-        // TODO[MN]: implement me
+        assertEquals(0, SwaggerPropertiesDoclet.optionLength("dummy"));
+        assertEquals(2, SwaggerPropertiesDoclet.optionLength("-classdir"));
     }
 
     @Test
