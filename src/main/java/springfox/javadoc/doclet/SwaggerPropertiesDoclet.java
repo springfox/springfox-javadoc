@@ -121,7 +121,7 @@ public class SwaggerPropertiesDoclet {
             }
         }
         if(!foundClassDir) {
-            reporter.printError("Usage: javadoc -classDir classes directory  -doclet  ...");
+            reporter.printError("Usage: javadoc -classdir classes directory  -doclet  ...");
         }
         return foundClassDir;
     }
@@ -197,7 +197,7 @@ public class SwaggerPropertiesDoclet {
     }
 
     private static void setRoot(StringBuilder pathRoot, AnnotationDesc.ElementValuePair pair) {
-        String value = pair.value().toString();
+        String value = pair.value().toString().replaceAll("\"$|^\"", "");
         if(!value.startsWith("/")) {
             pathRoot.append("/");
         }
