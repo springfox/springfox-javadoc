@@ -70,6 +70,8 @@
                     <target>${java.target.version}</target>
                 </configuration>
             </plugin>
+            <!-- generate a file that contains the paths to all dependencies. This file is used to set up the classpath for 
+                the javadoc command-line tool. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -88,6 +90,7 @@
                 </executions>
             </plugin>
         </plugins>
+        <!-- enable resource filtering to replace variable references in test.properties -->
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
