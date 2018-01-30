@@ -1,7 +1,9 @@
 package springfox.javadoc.doclet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -12,6 +14,9 @@ import java.util.Properties;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.sun.javadoc.DocErrorReporter;
+import com.sun.javadoc.SourcePosition;
 
 public class SwaggerPropertiesDocletTest {
 
@@ -32,7 +37,15 @@ public class SwaggerPropertiesDocletTest {
 
     @Test
     public void testValidOptions() {
-        // TODO[MN]: implement me
+        String[][] options = new String[][] {new String[] {"foo", "bar"}, new String[] {"baz", "dummy"}};
+        DummyDocErrorReporter reporter = new DummyDocErrorReporter();
+        assertFalse(SwaggerPropertiesDoclet.validOptions(options, reporter));
+        assertTrue(reporter.getErrors().contains("-classdir"));
+
+        options = new String[][] {new String[] {"foo", "bar"}, new String[] {"-classdir", "dummy"}};
+        reporter = new DummyDocErrorReporter();
+        assertTrue(SwaggerPropertiesDoclet.validOptions(options, reporter));
+        assertTrue(reporter.getErrors().isEmpty());
     }
 
     @Test
@@ -68,6 +81,56 @@ public class SwaggerPropertiesDocletTest {
         assertEquals("test method", props.getProperty("/test/test.GET.notes"));
         assertEquals("dummy value", props.getProperty("/test/test.GET.return"));
         assertEquals("dummy param", props.getProperty("/test/test.GET.param.param"));
+    }
+
+    public class DummyDocErrorReporter implements DocErrorReporter {
+
+        private final StringBuilder errors = new StringBuilder();
+        private final StringBuilder notices = new StringBuilder();
+        private final StringBuilder warnings = new StringBuilder();
+
+        @Override
+        public void printError(String error) {
+            errors.append(error).append("\n");
+        }
+
+        @Override
+        public void printError(SourcePosition position, String error) {
+            errors.append(error).append("\n");
+        }
+
+        @Override
+        public void printNotice(String notice) {
+            notices.append(notice).append("\n");
+        }
+
+        @Override
+        public void printNotice(SourcePosition position, String notice) {
+            notices.append(notice).append("\n");
+        }
+
+        @Override
+        public void printWarning(String warning) {
+            warnings.append(warning).append("\n");
+        }
+
+        @Override
+        public void printWarning(SourcePosition position, String warning) {
+            warnings.append(warning).append("\n");
+        }
+
+        public String getErrors() {
+            return errors.toString();
+        }
+
+        public String getNotices() {
+            return notices.toString();
+        }
+
+        public String getWarnings() {
+            return warnings.toString();
+        }
+
     }
 
 }
