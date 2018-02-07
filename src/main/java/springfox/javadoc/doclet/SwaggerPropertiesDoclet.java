@@ -293,7 +293,7 @@ public class SwaggerPropertiesDoclet {
     private static void processThrows(Properties properties, ThrowsTag[] throwsTags, StringBuilder path) {
         for(int i = 0; i < throwsTags.length; i++) {
             String key = path.toString() + ".throws." + i;
-            String value = throwsTags[i].exceptionType().qualifiedTypeName() + "-" + throwsTags[i].exceptionComment();
+            String value = throwsTags[i].exceptionType().typeName() + "-" + throwsTags[i].exceptionComment();
             saveProperty(properties, key, value);
         }
     }
