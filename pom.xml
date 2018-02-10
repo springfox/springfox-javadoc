@@ -29,6 +29,10 @@
             <id>bintray-repo-maven</id>
             <url>https://api.bintray.com/springfox/maven-repo/springfox-javadoc/;publish=1</url>
         </repository>
+        <snapshotRepository>
+            <id>bintray-snapshot-maven</id>
+            <url>http://oss.jfrog.org/oss-snapshot-local/io/springfox/springfox-javadoc/</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <dependencies>
