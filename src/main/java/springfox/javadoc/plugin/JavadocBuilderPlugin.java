@@ -68,29 +68,29 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
     public void apply(OperationContext context) {
 
         String notes = context.requestMappingPattern() + PERIOD + context.httpMethod().toString() + ".notes";
-        if(StringUtils.hasText(notes) && StringUtils.hasText(environment.getProperty(notes))) {
+        if (StringUtils.hasText(notes) && StringUtils.hasText(environment.getProperty(notes))) {
             context.operationBuilder().notes("<b>" + context.getName() + "</b><br/>" + environment.getProperty(notes));
         }
         String returnDescription = context.requestMappingPattern() + PERIOD + context.httpMethod().toString()
-                + ".return";
-        if(StringUtils.hasText(returnDescription) && StringUtils.hasText(environment.getProperty(returnDescription))) {
+          + ".return";
+        if (StringUtils.hasText(returnDescription) && StringUtils.hasText(environment.getProperty(returnDescription))) {
             context.operationBuilder().summary("returns " + environment.getProperty(returnDescription));
         }
         String throwsDescription = context.requestMappingPattern() + PERIOD + context.httpMethod().toString()
-                + ".throws.";
+          + ".throws.";
         int i = 0;
         Set<ResponseMessage> responseMessages = new HashSet<ResponseMessage>();
-        while(StringUtils.hasText(throwsDescription + i)
-                && StringUtils.hasText(environment.getProperty(throwsDescription + i))) {
+        while (StringUtils.hasText(throwsDescription + i)
+          && StringUtils.hasText(environment.getProperty(throwsDescription + i))) {
             String[] throwsValues = StringUtils.split(environment.getProperty(throwsDescription + i), "-");
-            if(throwsValues.length == 2) {
+            if (throwsValues.length == 2) {
                 // TODO[MN]: proper mapping once
                 // https://github.com/springfox/springfox/issues/521 is solved
                 String thrownExceptionName = throwsValues[0];
                 String throwComment = throwsValues[1];
                 ModelReference model = new ModelRef(thrownExceptionName);
                 ResponseMessage message = new ResponseMessageBuilder().code(500).message(throwComment)
-                        .responseModel(model).build();
+                  .responseModel(model).build();
                 responseMessages.add(message);
             }
             i++;
@@ -104,18 +104,18 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
         String description = null;
         Optional<String> parmName = context.resolvedMethodParameter().defaultName();
         Annotation apiParam = annotationFromField(context, API_PARAM);
-        if(apiParam != null) {
+        if (apiParam != null) {
             Optional<Boolean> isRequired = isParamRequired(apiParam, context);
-            if(isRequired.isPresent()) {
+            if (isRequired.isPresent()) {
                 context.parameterBuilder().required(isRequired.get());
             }
         }
-        if(parmName.isPresent() && (apiParam == null || !hasValue(apiParam, context))) {
+        if (parmName.isPresent() && (apiParam == null || !hasValue(apiParam, context))) {
             String key = context.getOperationContext().requestMappingPattern() + PERIOD
-                    + context.getOperationContext().httpMethod().name() + ".param." + parmName.get();
+              + context.getOperationContext().httpMethod().name() + ".param." + parmName.get();
             description = environment.getProperty(key);
         }
-        if(description != null) {
+        if (description != null) {
             context.parameterBuilder().description(description);
         }
     }
@@ -127,14 +127,14 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
 
     @VisibleForTesting
     Optional<Boolean> isParamRequired(Annotation apiParam, ParameterContext context) {
-        if(apiParam != null) {
+        if (apiParam != null) {
             Optional<Boolean> required = isRequired(apiParam, context);
-            if(required.isPresent()) {
+            if (required.isPresent()) {
                 return required;
             }
         }
         Annotation annotation = annotationFromField(context, REQUEST_PARAM);
-        if(annotation == null) {
+        if (annotation == null) {
             annotation = annotationFromField(context, PATH_VARIABLE);
         }
         return annotation != null ? isRequired(annotation, context) : Optional.<Boolean>absent();
@@ -142,8 +142,8 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
 
     @VisibleForTesting
     Optional<Boolean> isRequired(Annotation annotation, ParameterContext context) {
-        for(Method method : annotation.annotationType().getDeclaredMethods()) {
-            if(method.getName().equals("required")) {
+        for (Method method : annotation.annotationType().getDeclaredMethods()) {
+            if (method.getName().equals("required")) {
                 try {
                     return Optional.of((Boolean) method.invoke(annotation, (Object) null));
                 } catch (Exception ex) {
@@ -156,8 +156,8 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
 
     @VisibleForTesting
     boolean hasValue(Annotation annotation, ParameterContext context) {
-        for(Method method : annotation.annotationType().getDeclaredMethods()) {
-            if(method.getName().equals("value")) {
+        for (Method method : annotation.annotationType().getDeclaredMethods()) {
+            if (method.getName().equals("value")) {
                 try {
                     Optional<String> value = Optional.of((String) method.invoke(annotation, (Object) null));
                     return value.isPresent();
@@ -173,8 +173,8 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
 
         ResolvedMethodParameter methodParam = context.resolvedMethodParameter();
 
-        for(Annotation annotation : methodParam.getAnnotations()) {
-            if(annotation.annotationType().getName().equals(annotationType)) {
+        for (Annotation annotation : methodParam.getAnnotations()) {
+            if (annotation.annotationType().getName().equals(annotationType)) {
                 return annotation;
             }
         }

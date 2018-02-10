@@ -23,13 +23,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-
 import springfox.javadoc.doclet.SwaggerPropertiesDoclet;
 import springfox.javadoc.plugin.JavadocBuilderPlugin;
 
 @Configuration
 @PropertySource(value = "classpath:/"
-        + SwaggerPropertiesDoclet.SPRINGFOX_JAVADOC_PROPERTIES, ignoreResourceNotFound = true)
+  + SwaggerPropertiesDoclet.SPRINGFOX_JAVADOC_PROPERTIES, ignoreResourceNotFound = true)
 @ComponentScan("springfox.javadoc.plugin")
 public class JavadocPluginConfiguration {
 

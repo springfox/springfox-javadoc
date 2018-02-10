@@ -30,9 +30,8 @@ public class TestController {
 
     /**
      * test method
-     * 
-     * @param param
-     *            dummy param
+     *
+     * @param param dummy param
      * @return dummy value
      */
     @GetMapping("test")
