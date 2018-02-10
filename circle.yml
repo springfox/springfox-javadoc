@@ -25,11 +25,10 @@ dependencies:
     - gem install asciidoctor
   cache_directories:
     - ~/.m2
-    - ~/.gradle
+
 test:
   override:
-  - ./mvnw clean install:
-      timeout: 900
+  - ./mvnw clean install
   - mkdir -p $CIRCLE_TEST_REPORTS/junit/
   - find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
 
