@@ -1,4 +1,7 @@
 # springfox-javadoc
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/32f99b3650794b5eb1f7c155a57d5100)](https://app.codacy.com/app/dilip-krishnan-github/springfox-javadoc?utm_source=github.com&utm_medium=referral&utm_content=springfox/springfox-javadoc&utm_campaign=badger)
+
 Ability to use Javadoc for documentation for generating OpenAPI specifications
 
 To use this, make sure that `JavadocPluginConfiguration` is found by your spring context and add the execution of the javadoc doclet to your build process.
