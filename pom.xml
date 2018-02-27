@@ -5,7 +5,7 @@
 
     <groupId>io.springfox</groupId>
     <artifactId>springfox-javadoc</artifactId>
-    <version>0.9.1</version>
+    <version>0.9.2</version>
 
     <name>springfox-javadoc</name>
     <description>generate Swagger/OpenAPI documentation from Javadoc using Springfox</description>
@@ -124,14 +124,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
         <!-- enable resource filtering to replace variable references in test.properties -->
