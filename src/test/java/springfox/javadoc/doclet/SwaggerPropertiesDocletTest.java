@@ -50,12 +50,12 @@ public class SwaggerPropertiesDocletTest {
 
     @Test
     public void testValidOptions() {
-        String[][] options = new String[][]{new String[]{"foo", "bar"}, new String[]{"baz", "dummy"}};
+        String[][] options = new String[][] {new String[] {"foo", "bar"}, new String[] {"baz", "dummy"}};
         DummyDocErrorReporter reporter = new DummyDocErrorReporter();
         assertFalse(SwaggerPropertiesDoclet.validOptions(options, reporter));
         assertTrue(reporter.getErrors().contains("-classdir"));
 
-        options = new String[][]{new String[]{"foo", "bar"}, new String[]{"-classdir", "dummy"}};
+        options = new String[][] {new String[] {"foo", "bar"}, new String[] {"-classdir", "dummy"}};
         reporter = new DummyDocErrorReporter();
         assertTrue(SwaggerPropertiesDoclet.validOptions(options, reporter));
         assertTrue(reporter.getErrors().isEmpty());
@@ -70,7 +70,7 @@ public class SwaggerPropertiesDocletTest {
         StringBuilder classpath = new StringBuilder();
         String line;
         BufferedReader classpathReader = new BufferedReader(new InputStreamReader(fis));
-        while ((line = classpathReader.readLine()) != null) {
+        while((line = classpathReader.readLine()) != null) {
             classpath.append(line);
         }
         classpathReader.close();
@@ -98,7 +98,7 @@ public class SwaggerPropertiesDocletTest {
 
         // read in the properties file created by the SwaggerPropertiesDoclet
         InputStream inputStream = SwaggerPropertiesDocletTest.class
-          .getResourceAsStream("/" + SwaggerPropertiesDoclet.SPRINGFOX_JAVADOC_PROPERTIES);
+                .getResourceAsStream("/" + SwaggerPropertiesDoclet.SPRINGFOX_JAVADOC_PROPERTIES);
         assertNotNull(inputStream);
 
         // check that the properties match the example sources
@@ -107,6 +107,9 @@ public class SwaggerPropertiesDocletTest {
         assertEquals("test method", props.getProperty("/test/test.GET.notes"));
         assertEquals("dummy value", props.getProperty("/test/test.GET.return"));
         assertEquals("dummy param", props.getProperty("/test/test.GET.param.param"));
+        assertEquals("without value or path", props.getProperty("/test.POST.notes"));
+        assertEquals("retval", props.getProperty("/test.POST.return"));
+        assertEquals("param", props.getProperty("/test.POST.param.bar"));
     }
 
     public class DummyDocErrorReporter implements DocErrorReporter {

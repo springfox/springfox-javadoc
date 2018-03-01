@@ -249,6 +249,9 @@ public class SwaggerPropertiesDoclet {
                         break;
                     }
                 }
+                if(!path.substring(path.length() - 1).equals(".")) {
+                    path.append(".");
+                }
                 String requestMethod = getRequestMethod(annotationDesc, annotationType, defaultRequestMethod);
                 if(requestMethod != null) {
                     path.append(requestMethod);

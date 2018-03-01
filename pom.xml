@@ -5,7 +5,7 @@
 
     <groupId>io.springfox</groupId>
     <artifactId>springfox-javadoc</artifactId>
-    <version>0.9.3</version>
+    <version>0.9.4</version>
 
     <name>springfox-javadoc</name>
     <description>generate Swagger/OpenAPI documentation from Javadoc using Springfox</description>
