@@ -15,7 +15,44 @@
         <developerConnection>https://github.com/springfox/springfox-javadoc.git</developerConnection>
         <url>https://github.com/springfox/springfox-javadoc</url>
     </scm>
-
+    
+    <developers>
+        <developer>
+          <id>dilipkrish</id>
+          <name>Dilip Krishnan</name>
+          <url>https://github.com/dilipkrish</url>
+          <roles>
+            <role>architect</role>
+          </roles>
+          <timezone>America/Chicago</timezone>
+          <properties>
+            <picUrl>https://avatars2.githubusercontent.com/u/73257</picUrl>
+          </properties>
+        </developer>
+        <developer>
+          <id>rgoers</id>
+          <name>Ralph Goers</name>
+          <email>rgoers@apache.org</email>
+          <url>https://github.com/rgoers</url>
+          <roles>
+            <role>developer</role>
+          </roles>
+        </developer>
+        <developer>
+          <id>MartinNeumannBeTSE</id>
+          <name>Martin Neumann</name>
+          <email>martin.neumann@be-tse.de</email>
+          <url>https://github.com/MartinNeumannBeTSE</url>
+          <organization>Be Think, Solve, Execute GmbH</organization>
+          <organizationUrl>http://www.be-tse.de</organizationUrl>
+          <roles>
+            <role>architect</role>
+            <role>developer</role>
+          </roles>
+          <timezone>Europe/Berlin</timezone>
+        </developer>
+    </developers>
+    
     <properties>
         <java.source.version>1.6</java.source.version>
         <java.target.version>1.6</java.target.version>
