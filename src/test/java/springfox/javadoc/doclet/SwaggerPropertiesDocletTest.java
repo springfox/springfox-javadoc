@@ -28,6 +28,11 @@ import java.util.Properties;
 
 import static org.junit.Assert.*;
 
+/**
+ * unit tests for {@link SwaggerPropertiesDoclet}
+ * 
+ * @author MartinNeumannBeTSE
+ */
 public class SwaggerPropertiesDocletTest {
 
     /**

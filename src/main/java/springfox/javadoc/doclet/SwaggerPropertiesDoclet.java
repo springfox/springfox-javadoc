@@ -42,6 +42,9 @@ import springfox.javadoc.plugin.JavadocBuilderPlugin;
  * <p>
  * The generated properties file will then be read by the
  * {@link JavadocBuilderPlugin} to enhance the Swagger documentation.
+ * 
+ * @author rgoers
+ * @author MartinNeumannBeTSE
  */
 public class SwaggerPropertiesDoclet {
 
