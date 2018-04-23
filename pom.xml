@@ -6,16 +6,20 @@
     <groupId>io.springfox</groupId>
     <artifactId>springfox-javadoc</artifactId>
     <version>0.9.4</version>
-
+    <url> https://github.com/springfox/springfox-javadoc</url>
     <name>springfox-javadoc</name>
     <description>generate Swagger/OpenAPI documentation from Javadoc using Springfox</description>
+    <organization>
+        <name>Springfox</name>
+        <url>http://springfox.io</url>
+    </organization>
 
     <scm>
         <connection>https://github.com/springfox/springfox-javadoc.git</connection>
         <developerConnection>https://github.com/springfox/springfox-javadoc.git</developerConnection>
         <url>https://github.com/springfox/springfox-javadoc</url>
     </scm>
-    
+
     <developers>
         <developer>
           <id>dilipkrish</id>
@@ -51,8 +55,27 @@
           </roles>
           <timezone>Europe/Berlin</timezone>
         </developer>
+        <developer>
+            <id>neumaennl</id>
+            <name>Martin Neumann</name>
+            <url>https://github.com/neumaennl</url>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Berlin</timezone>
+        </developer>
     </developers>
-    
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
+
     <properties>
         <java.source.version>1.6</java.source.version>
         <java.target.version>1.6</java.target.version>
