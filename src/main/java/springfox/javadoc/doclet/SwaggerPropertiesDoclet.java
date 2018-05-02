@@ -138,7 +138,10 @@ public class SwaggerPropertiesDoclet {
      * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
      * custom command-line options</a>
      */
-    public static boolean validOptions(String[][] options, DocErrorReporter reporter) {
+    public static boolean validOptions(
+      String[][] options,
+      DocErrorReporter reporter) {
+
         boolean foundClassDir = false;
         boolean foundExceptionRef = false;
         for (String[] opt : options) {
@@ -198,9 +201,12 @@ public class SwaggerPropertiesDoclet {
                     String defaultRequestMethod = processClass(classDoc, sb);
                     String pathRoot = sb.toString();
                     for (MethodDoc methodDoc : classDoc.methods()) {
-                        processMethod(properties, methodDoc, defaultRequestMethod, pathRoot,
+                        processMethod(
+                          properties,
+                          methodDoc,
+                          defaultRequestMethod,
+                          pathRoot,
                           getExceptionRef(root.options()));
-
                     }
                 }
                 properties.store(javadoc, "Springfox javadoc properties");
@@ -219,7 +225,10 @@ public class SwaggerPropertiesDoclet {
         return true;
     }
 
-    private static String processClass(ClassDoc classDoc, StringBuilder pathRoot) {
+    private static String processClass(
+      ClassDoc classDoc,
+      StringBuilder pathRoot) {
+
         String defaultRequestMethod = null;
         for (AnnotationDesc annotationDesc : classDoc.annotations()) {
             if (REQUEST_MAPPING.equals(annotationDesc.annotationType().qualifiedTypeName())) {
@@ -238,7 +247,10 @@ public class SwaggerPropertiesDoclet {
         return defaultRequestMethod;
     }
 
-    private static void setRoot(StringBuilder pathRoot, AnnotationDesc.ElementValuePair pair) {
+    private static void setRoot(
+      StringBuilder pathRoot,
+      AnnotationDesc.ElementValuePair pair) {
+
         String value = pair.value().toString().replaceAll("\"$|^\"", "");
         if (!value.startsWith("/")) {
             pathRoot.append("/");
@@ -250,8 +262,13 @@ public class SwaggerPropertiesDoclet {
         }
     }
 
-    private static void processMethod(Properties properties, MethodDoc methodDoc, String defaultRequestMethod,
-                                      String pathRoot, boolean exceptionRef) {
+    private static void processMethod(
+      Properties properties,
+      MethodDoc methodDoc,
+      String defaultRequestMethod,
+      String pathRoot,
+      boolean exceptionRef) {
+
         for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
             String annotationType = annotationDesc.annotationType().toString();
             if (isMapping(annotationType)) {
@@ -288,7 +305,10 @@ public class SwaggerPropertiesDoclet {
         }
     }
 
-    private static void appendPath(StringBuilder path, AnnotationDesc.ElementValuePair pair) {
+    private static void appendPath(
+      StringBuilder path,
+      AnnotationDesc.ElementValuePair pair) {
+
         String value = pair.value().toString().replaceAll("\"$|^\"", "");
         if (value.startsWith("/")) {
             path.append(value).append(".");
@@ -306,7 +326,11 @@ public class SwaggerPropertiesDoclet {
         return false;
     }
 
-    private static String getRequestMethod(AnnotationDesc annotationDesc, String name, String defaultRequestMethod) {
+    private static String getRequestMethod(
+      AnnotationDesc annotationDesc,
+      String name,
+      String defaultRequestMethod) {
+
         if (REQUEST_MAPPING.equals(name)) {
             for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
                 if (METHOD.equals(pair.element().name())) {
@@ -327,7 +351,10 @@ public class SwaggerPropertiesDoclet {
         return defaultRequestMethod;
     }
 
-    private static String resolveRequestMethod(AnnotationDesc.ElementValuePair pair, String defaultRequestMethod) {
+    private static String resolveRequestMethod(
+      AnnotationDesc.ElementValuePair pair,
+      String defaultRequestMethod) {
+
         String value = pair.value().toString();
         for (String[] each : REQUEST_MAPPINGS) {
             if (each[0].equals(value)) {
@@ -337,7 +364,11 @@ public class SwaggerPropertiesDoclet {
         return defaultRequestMethod;
     }
 
-    private static void processThrows(Properties properties, ThrowsTag[] throwsTags, StringBuilder path) {
+    private static void processThrows(
+      Properties properties,
+      ThrowsTag[] throwsTags,
+      StringBuilder path) {
+
         for (int i = 0; i < throwsTags.length; i++) {
             String key = path.toString() + ".throws." + i;
             String value = throwsTags[i].exceptionType().typeName() + "-" + throwsTags[i].exceptionComment();
@@ -345,7 +376,11 @@ public class SwaggerPropertiesDoclet {
         }
     }
 
-    private static void saveProperty(Properties properties, String key, String value) {
+    private static void saveProperty(
+      Properties properties,
+      String key,
+      String value) {
+
         value = value.replaceAll(NEWLINE, EMPTY);
         if (value.length() > 0) {
             properties.setProperty(key, value);
