@@ -35,6 +35,7 @@ jar {
             'Implementation-Title': project.name,
             'Implementation-Version': project.name
         )
+        //TODO: handle the package export
 //        instruction 'Export-Package', '!springfox.*.internal,*'
         instruction 'Import-Package', "!${project.osgiManifest().symbolicName}.*,*"
         instruction 'Bundle-Description', 'A library to generate documentation from javadocs'
@@ -106,7 +107,7 @@ publishing {
                     it.scope*.value = 'compile'
                 }
 
-                root.appendNode('name', "${project.name}")
+                root.appendNode('name', project.name)
                 root.appendNode('packaging', 'jar')
                 root.appendNode('projectUrl', "${project.projectUrl}/LICENCE")
                 root.appendNode('description', project.description)
