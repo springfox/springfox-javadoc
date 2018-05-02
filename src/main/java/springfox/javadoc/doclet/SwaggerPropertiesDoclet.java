@@ -18,6 +18,16 @@
  */
 package springfox.javadoc.doclet;
 
+import com.sun.javadoc.AnnotationDesc;
+import com.sun.javadoc.ClassDoc;
+import com.sun.javadoc.DocErrorReporter;
+import com.sun.javadoc.MethodDoc;
+import com.sun.javadoc.ParamTag;
+import com.sun.javadoc.RootDoc;
+import com.sun.javadoc.Tag;
+import com.sun.javadoc.ThrowsTag;
+import springfox.javadoc.plugin.JavadocBuilderPlugin;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,35 +36,21 @@ import java.util.Properties;
 
 // the NOSONAR comment is added to ignore sonar warning about usage of Sun classes
 // because doclets can only be written using Sun classes
-import com.sun.javadoc.AnnotationDesc; // NOSONAR
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.DocErrorReporter;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.ParamTag;
-import com.sun.javadoc.RootDoc;
-import com.sun.javadoc.Tag;
-import com.sun.javadoc.ThrowsTag;
-
-import springfox.javadoc.plugin.JavadocBuilderPlugin;
 
 /**
  * Generate properties file based on Javadoc.
  * <p>
  * The generated properties file will then be read by the
  * {@link JavadocBuilderPlugin} to enhance the Swagger documentation.
- * 
+ *
  * @author rgoers
  * @author MartinNeumannBeTSE
  */
 public class SwaggerPropertiesDoclet {
 
-    private SwaggerPropertiesDoclet() {}
-
-    private static final String CLASSDIR_OPTION = "-classdir";
-    private static final String EXCEPTION_REF_OPTION = "-exceptionRef";
-
     public static final String SPRINGFOX_JAVADOC_PROPERTIES = "META-INF/springfox.javadoc.properties";
-
+    private static final String CLASS_DIR_OPTION = "-classdir";
+    private static final String EXCEPTION_REF_OPTION = "-exceptionRef";
     private static final String REQUEST_MAPPING = "org.springframework.web.bind.annotation.RequestMapping";
     private static final String REQUEST_GET_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.GET";
     private static final String REQUEST_POST_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.POST";
@@ -73,12 +69,25 @@ public class SwaggerPropertiesDoclet {
     private static final String EMPTY = "";
     private static final String METHOD = "method";
 
-    private static final String[] MAPPINGS = new String[] {DELETE_MAPPING, GET_MAPPING, PATCH_MAPPING, POST_MAPPING,
-            PUT_MAPPING, REQUEST_MAPPING};
+    private static final String[] MAPPINGS = new String[] {
+      DELETE_MAPPING,
+      GET_MAPPING,
+      PATCH_MAPPING,
+      POST_MAPPING,
+      PUT_MAPPING,
+      REQUEST_MAPPING };
 
-    private static final String[][] REQUEST_MAPPINGS = new String[][] {{REQUEST_DELETE_MAPPING, "DELETE"},
-            {REQUEST_GET_MAPPING, "GET"}, {REQUEST_PATCH_MAPPING, "PATCH"}, {REQUEST_POST_MAPPING, "POST"},
-            {REQUEST_PUT_MAPPING, "PUT"}};
+    private static final String[][] REQUEST_MAPPINGS = new String[][] {
+      { REQUEST_DELETE_MAPPING, "DELETE" },
+      { REQUEST_GET_MAPPING, "GET" },
+      { REQUEST_PATCH_MAPPING, "PATCH" },
+      { REQUEST_POST_MAPPING, "POST" },
+      { REQUEST_PUT_MAPPING, "PUT" }
+    };
+
+    private SwaggerPropertiesDoclet() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * See <a href=
@@ -86,8 +95,8 @@ public class SwaggerPropertiesDoclet {
      * custom command-line options</a>
      */
     private static String getClassDir(String[][] options) {
-        for(String[] opt : options) {
-            if(opt[0].equalsIgnoreCase(CLASSDIR_OPTION)) {
+        for (String[] opt : options) {
+            if (opt[0].equalsIgnoreCase(CLASS_DIR_OPTION)) {
                 return opt[1];
             }
         }
@@ -100,8 +109,8 @@ public class SwaggerPropertiesDoclet {
      * custom command-line options</a>
      */
     private static boolean getExceptionRef(String[][] options) {
-        for(String[] opt : options) {
-            if(opt[0].equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
+        for (String[] opt : options) {
+            if (opt[0].equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
                 return Boolean.valueOf(opt[1]);
             }
         }
@@ -115,10 +124,10 @@ public class SwaggerPropertiesDoclet {
      */
     public static int optionLength(String option) {
         int length = 0;
-        if(option.equalsIgnoreCase(CLASSDIR_OPTION)) {
+        if (option.equalsIgnoreCase(CLASS_DIR_OPTION)) {
             length = 2;
         }
-        if(option.equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
+        if (option.equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
             length = 2;
         }
         return length;
@@ -132,17 +141,17 @@ public class SwaggerPropertiesDoclet {
     public static boolean validOptions(String[][] options, DocErrorReporter reporter) {
         boolean foundClassDir = false;
         boolean foundExceptionRef = false;
-        for(String[] opt : options) {
-            if(opt[0].equalsIgnoreCase(CLASSDIR_OPTION)) {
-                if(foundClassDir) {
+        for (String[] opt : options) {
+            if (opt[0].equalsIgnoreCase(CLASS_DIR_OPTION)) {
+                if (foundClassDir) {
                     reporter.printError("Only one -classdir option allowed.");
                     return false;
                 } else {
                     foundClassDir = true;
                 }
             }
-            if(opt[0].equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
-                if(foundExceptionRef) {
+            if (opt[0].equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
+                if (foundExceptionRef) {
                     reporter.printError("Only one -exceptionRef option allowed.");
                     return false;
                 } else {
@@ -150,9 +159,10 @@ public class SwaggerPropertiesDoclet {
                 }
             }
         }
-        if(!foundClassDir) {
+        if (!foundClassDir) {
             reporter.printError(
-                    "Usage: javadoc -classdir classes directory [-exceptionRef true|false (generate references to excetion classes)] -doclet  ...");
+              "Usage: javadoc -classdir classes directory [-exceptionRef true|false (generate references to exception"
+                + " classes)] -doclet  ...");
         }
         return foundClassDir;
     }
@@ -165,12 +175,12 @@ public class SwaggerPropertiesDoclet {
     public static boolean start(RootDoc root) {
 
         String classDir = getClassDir(root.options());
-        if(classDir == null || classDir.length() == 0) {
+        if (classDir == null || classDir.length() == 0) {
             root.printError("No output location was specified");
             return false;
         } else {
             StringBuilder sb = new StringBuilder(classDir);
-            if(!classDir.endsWith("/")) {
+            if (!classDir.endsWith("/")) {
                 sb.append("/");
             }
             sb.append(SPRINGFOX_JAVADOC_PROPERTIES);
@@ -183,13 +193,13 @@ public class SwaggerPropertiesDoclet {
                 javadoc = new FileOutputStream(file);
                 Properties properties = new Properties();
 
-                for(ClassDoc classDoc : root.classes()) {
+                for (ClassDoc classDoc : root.classes()) {
                     sb.setLength(0);
                     String defaultRequestMethod = processClass(classDoc, sb);
                     String pathRoot = sb.toString();
-                    for(MethodDoc methodDoc : classDoc.methods()) {
+                    for (MethodDoc methodDoc : classDoc.methods()) {
                         processMethod(properties, methodDoc, defaultRequestMethod, pathRoot,
-                                getExceptionRef(root.options()));
+                          getExceptionRef(root.options()));
 
                     }
                 }
@@ -197,7 +207,7 @@ public class SwaggerPropertiesDoclet {
             } catch (IOException e) {
                 root.printError(e.getMessage());
             } finally {
-                if(javadoc != null) {
+                if (javadoc != null) {
                     try {
                         javadoc.close();
                     } catch (IOException e) {
@@ -211,14 +221,14 @@ public class SwaggerPropertiesDoclet {
 
     private static String processClass(ClassDoc classDoc, StringBuilder pathRoot) {
         String defaultRequestMethod = null;
-        for(AnnotationDesc annotationDesc : classDoc.annotations()) {
-            if(REQUEST_MAPPING.equals(annotationDesc.annotationType().qualifiedTypeName())) {
-                for(AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
+        for (AnnotationDesc annotationDesc : classDoc.annotations()) {
+            if (REQUEST_MAPPING.equals(annotationDesc.annotationType().qualifiedTypeName())) {
+                for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
 
-                    if(VALUE.equals(pair.element().name()) || PATH.equals(pair.element().name())) {
+                    if (VALUE.equals(pair.element().name()) || PATH.equals(pair.element().name())) {
                         setRoot(pathRoot, pair);
                     }
-                    if(METHOD.equals(pair.element().name())) {
+                    if (METHOD.equals(pair.element().name())) {
                         defaultRequestMethod = pair.value().toString();
                     }
                 }
@@ -230,47 +240,47 @@ public class SwaggerPropertiesDoclet {
 
     private static void setRoot(StringBuilder pathRoot, AnnotationDesc.ElementValuePair pair) {
         String value = pair.value().toString().replaceAll("\"$|^\"", "");
-        if(!value.startsWith("/")) {
+        if (!value.startsWith("/")) {
             pathRoot.append("/");
         }
-        if(value.endsWith("/")) {
-            pathRoot.append(value.substring(0, value.length() - 1));
+        if (value.endsWith("/")) {
+            pathRoot.append(value, 0, value.length() - 1);
         } else {
             pathRoot.append(value);
         }
     }
 
     private static void processMethod(Properties properties, MethodDoc methodDoc, String defaultRequestMethod,
-            String pathRoot, boolean excetionRef) {
-        for(AnnotationDesc annotationDesc : methodDoc.annotations()) {
+                                      String pathRoot, boolean exceptionRef) {
+        for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
             String annotationType = annotationDesc.annotationType().toString();
-            if(isMapping(annotationType)) {
+            if (isMapping(annotationType)) {
                 StringBuilder path = new StringBuilder(pathRoot);
-                for(AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
-                    if(VALUE.equals(pair.element().name()) || PATH.equals(pair.element().name())) {
+                for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
+                    if (VALUE.equals(pair.element().name()) || PATH.equals(pair.element().name())) {
                         appendPath(path, pair);
                         break;
                     }
                 }
-                if(!path.substring(path.length() - 1).equals(".")) {
+                if (!path.substring(path.length() - 1).equals(".")) {
                     path.append(".");
                 }
                 String requestMethod = getRequestMethod(annotationDesc, annotationType, defaultRequestMethod);
-                if(requestMethod != null) {
+                if (requestMethod != null) {
                     path.append(requestMethod);
                     saveProperty(properties, path.toString() + ".notes", methodDoc.commentText());
 
-                    for(ParamTag paramTag : methodDoc.paramTags()) {
+                    for (ParamTag paramTag : methodDoc.paramTags()) {
                         saveProperty(properties, path.toString() + ".param." + paramTag.parameterName(),
-                                paramTag.parameterComment());
+                          paramTag.parameterComment());
                     }
-                    for(Tag tag : methodDoc.tags()) {
-                        if(tag.name().equals(RETURN)) {
+                    for (Tag tag : methodDoc.tags()) {
+                        if (tag.name().equals(RETURN)) {
                             saveProperty(properties, path.toString() + ".return", tag.text());
                             break;
                         }
                     }
-                    if(excetionRef) {
+                    if (exceptionRef) {
                         processThrows(properties, methodDoc.throwsTags(), path);
                     }
                 }
@@ -280,7 +290,7 @@ public class SwaggerPropertiesDoclet {
 
     private static void appendPath(StringBuilder path, AnnotationDesc.ElementValuePair pair) {
         String value = pair.value().toString().replaceAll("\"$|^\"", "");
-        if(value.startsWith("/")) {
+        if (value.startsWith("/")) {
             path.append(value).append(".");
         } else {
             path.append("/").append(value).append(".");
@@ -288,8 +298,8 @@ public class SwaggerPropertiesDoclet {
     }
 
     private static boolean isMapping(String name) {
-        for(String mapping : MAPPINGS) {
-            if(mapping.equals(name)) {
+        for (String mapping : MAPPINGS) {
+            if (mapping.equals(name)) {
                 return true;
             }
         }
@@ -297,21 +307,21 @@ public class SwaggerPropertiesDoclet {
     }
 
     private static String getRequestMethod(AnnotationDesc annotationDesc, String name, String defaultRequestMethod) {
-        if(REQUEST_MAPPING.equals(name)) {
-            for(AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
-                if(METHOD.equals(pair.element().name())) {
+        if (REQUEST_MAPPING.equals(name)) {
+            for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
+                if (METHOD.equals(pair.element().name())) {
                     return resolveRequestMethod(pair, defaultRequestMethod);
                 }
             }
-        } else if(PUT_MAPPING.equals(name)) {
+        } else if (PUT_MAPPING.equals(name)) {
             return "PUT";
-        } else if(POST_MAPPING.equals(name)) {
+        } else if (POST_MAPPING.equals(name)) {
             return "POST";
-        } else if(PATCH_MAPPING.equals(name)) {
+        } else if (PATCH_MAPPING.equals(name)) {
             return "PATCH";
-        } else if(GET_MAPPING.equals(name)) {
+        } else if (GET_MAPPING.equals(name)) {
             return "GET";
-        } else if(DELETE_MAPPING.equals(name)) {
+        } else if (DELETE_MAPPING.equals(name)) {
             return "DELETE";
         }
         return defaultRequestMethod;
@@ -319,16 +329,16 @@ public class SwaggerPropertiesDoclet {
 
     private static String resolveRequestMethod(AnnotationDesc.ElementValuePair pair, String defaultRequestMethod) {
         String value = pair.value().toString();
-        for(int i = 0; i < REQUEST_MAPPINGS.length; ++i) {
-            if(REQUEST_MAPPINGS[i][0].equals(value)) {
-                return REQUEST_MAPPINGS[i][1];
+        for (String[] each : REQUEST_MAPPINGS) {
+            if (each[0].equals(value)) {
+                return each[1];
             }
         }
         return defaultRequestMethod;
     }
 
     private static void processThrows(Properties properties, ThrowsTag[] throwsTags, StringBuilder path) {
-        for(int i = 0; i < throwsTags.length; i++) {
+        for (int i = 0; i < throwsTags.length; i++) {
             String key = path.toString() + ".throws." + i;
             String value = throwsTags[i].exceptionType().typeName() + "-" + throwsTags[i].exceptionComment();
             saveProperty(properties, key, value);
@@ -337,7 +347,7 @@ public class SwaggerPropertiesDoclet {
 
     private static void saveProperty(Properties properties, String key, String value) {
         value = value.replaceAll(NEWLINE, EMPTY);
-        if(value.length() > 0) {
+        if (value.length() > 0) {
             properties.setProperty(key, value);
         }
     }
