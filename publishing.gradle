@@ -109,15 +109,15 @@ publishing {
 
                 root.appendNode('name', project.name)
                 root.appendNode('packaging', 'jar')
-                root.appendNode('projectUrl', "${project.projectUrl}/LICENCE")
+                root.appendNode('url', project.projectUrl)
                 root.appendNode('description', project.description)
 
                 def license = root.appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'Apache-2.0')
-                license.appendNode('projectUrl', "${project.url}/LICENSE")
+                license.appendNode('url', "${project.projectUrl}/LICENSE")
                 license.appendNode('distribution', 'repo')
 
-                root.appendNode('scm').appendNode('projectUrl', "${project.projectUrl}.git")
+                root.appendNode('scm').appendNode('url', "${project.projectUrl}.git")
 
                 def developers = root.appendNode('developers')
                 devs.each {
