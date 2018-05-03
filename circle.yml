@@ -30,7 +30,9 @@ test:
   override:
   - ./gradlew clean build artifactoryPublish
   - mkdir -p $CIRCLE_TEST_REPORTS/junit/
-  - find . -type f -regex ".*/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+  - find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
+  - mkdir -p $CIRCLE_TEST_REPORTS/reports/
+  - find . -type f -regex ".*/build/reports/.*" -exec cp {} $CIRCLE_TEST_REPORTS/reports/ \;
 
 
 #deployment:
