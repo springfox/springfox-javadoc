@@ -142,7 +142,7 @@ public class SwaggerPropertiesDoclet {
      * @param root {@link RootDoc}
      * @return true if it started successfully
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "WeakerAccess", "UnusedReturnValue" })
     public static boolean start(RootDoc root) {
 
         String propertyFilePath = docletOptions.getPropertyFilePath();
@@ -158,6 +158,7 @@ public class SwaggerPropertiesDoclet {
             String out = sb.toString();
             root.printNotice("Writing output to " + out);
             File file = new File(out);
+            //noinspection ResultOfMethodCallIgnored
             file.getParentFile().mkdirs();
             OutputStream javadoc = null;
             try {

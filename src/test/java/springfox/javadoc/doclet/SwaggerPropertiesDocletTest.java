@@ -20,53 +20,53 @@ package springfox.javadoc.doclet;
 
 import com.sun.javadoc.DocErrorReporter;
 import com.sun.javadoc.SourcePosition;
+import com.sun.tools.javadoc.Main;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
+import static springfox.javadoc.doclet.SwaggerPropertiesDoclet.*;
 
-/**
- * unit tests for {@link SwaggerPropertiesDoclet}
- *
- * @author MartinNeumannBeTSE
- */
 public class SwaggerPropertiesDocletTest {
 
-    /**
-     * contains all full paths to relevant directories
-     */
-    private static final Properties PROPERTIES = new Properties();
+    private static final String BUILD_PROPERTY_FILE_LOCATION = "./build/property-file-location";
+    private static final String GENERATED_PROPERTY_FILE =
+      String.format("%s/%s", BUILD_PROPERTY_FILE_LOCATION, SPRINGFOX_JAVADOC_PROPERTIES);
 
     @BeforeClass
-    public static void loadProperties() throws IOException {
-        InputStream inputStream = SwaggerPropertiesDocletTest.class.getResourceAsStream("/test.properties");
-        PROPERTIES.load(inputStream);
-        inputStream.close();
+    public static void setupFixture() {
+        deletePropertyFile();
+    }
+
+    @AfterClass
+    public static void cleanupFixture() {
+        deletePropertyFile();
     }
 
     @Test
-    public void testValidOptionLength() throws IOException {
-        assertEquals(2, SwaggerPropertiesDoclet.optionLength("-classdir"));
+    public void testValidOptionLength() {
+        assertEquals(2, optionLength("-classdir"));
     }
 
     @Test
-    public void testInvalidOptionLength() throws IOException {
-        assertEquals(0, SwaggerPropertiesDoclet.optionLength("dummy"));
+    public void testInvalidOptionLength() {
+        assertEquals(0, optionLength("dummy"));
     }
 
     @Test
     public void testValidOptions() {
         String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "-classdir", "dummy" } };
         DummyDocErrorReporter reporter = new DummyDocErrorReporter();
-        assertTrue(SwaggerPropertiesDoclet.validOptions(options, reporter));
+        assertTrue(validOptions(options, reporter));
         assertTrue(reporter.getErrors().isEmpty());
     }
 
@@ -74,62 +74,36 @@ public class SwaggerPropertiesDocletTest {
     public void testInvalidOptions() {
         String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "baz", "dummy" } };
         DummyDocErrorReporter reporter = new DummyDocErrorReporter();
-        assertFalse(SwaggerPropertiesDoclet.validOptions(options, reporter));
+        assertFalse(validOptions(options, reporter));
         assertTrue(reporter.getErrors().contains("-classdir"));
     }
 
     @Test
-    @Ignore
-    public void testPropertiesGeneration() throws IOException, InterruptedException {
-        // read in the classpath file as a string.
-        // Using the @<file-path> syntax supported by the javadoc tool won't work, if
-        // the classpath contains whitespace.
-        FileInputStream fis = new FileInputStream(PROPERTIES.getProperty("classpath.file"));
-        StringBuilder classpath = new StringBuilder();
-        String line;
-        BufferedReader classpathReader = new BufferedReader(new InputStreamReader(fis));
-        while ((line = classpathReader.readLine()) != null) {
-            classpath.append(line);
-        }
-        classpathReader.close();
+    public void testPropertiesGeneration() throws IOException {
 
+        StringWriter err = new StringWriter();
+        StringWriter warn = new StringWriter();
+        StringWriter notice = new StringWriter();
 
-        // all the paths are read from the properties file because the javadoc
-        // command-line tool needs full paths.
-        // The properties file contains placeholders that are replaced by the maven
-        // resource filter plugin to convert project-relative paths to full paths.
-        StringBuilder command = new StringBuilder();
-        command.append(PROPERTIES.getProperty("java.home"))
-          .append("/../bin/javadoc");
-        command.append(" -doclet springfox.javadoc.doclet.SwaggerPropertiesDoclet");
-        command.append(" -docletpath ")
-          .append(PROPERTIES.getProperty("doclet.path"));
-        command.append(" -sourcepath ")
-          .append(PROPERTIES.getProperty("source.path"));
-        command.append(" -subpackages ")
-          .append(PROPERTIES.getProperty("package.name"));
-        command.append(" -classdir ")
-          .append(PROPERTIES.getProperty("class.dir"));
-        // enclose the classpath in quotes so that it still works if the classpath
-        // contains whitespace
-        command.append(" -classpath ")
-          .append("\"")
-          .append(classpath.toString()).append("\"");
+        String[] args = new String[] {
+          "-sourcepath",
+          "./src/test/java",
+          "-subpackages",
+          "springfox.javadoc",
+          "springfox.javadoc",
+          "-classdir",
+          BUILD_PROPERTY_FILE_LOCATION
+        };
 
-        // run the javadoc command-line tool to execute the SwaggerPropertiesDoclet on
-        // the classes in the springfox.javadoc.example package
-        Process process = Runtime.getRuntime().exec(command.toString());
-        process.waitFor();
-        assertEquals(0, process.exitValue()); // make sure there were no errors
+        Main.execute(
+          "SwaggerPropertiesDoclet",
+          new PrintWriter(err),
+          new PrintWriter(warn),
+          new PrintWriter(notice),
+          SwaggerPropertiesDoclet.class.getName(),
+          args);
 
-        // read in the properties file created by the SwaggerPropertiesDoclet
-        InputStream inputStream = SwaggerPropertiesDocletTest.class
-          .getResourceAsStream("/" + SwaggerPropertiesDoclet.SPRINGFOX_JAVADOC_PROPERTIES);
-        assertNotNull(inputStream);
-
-        // check that the properties match the example sources
-        Properties props = new Properties();
-        props.load(inputStream);
+        Properties props = generatedProperties();
         assertEquals("test method", props.getProperty("/test/test.GET.notes"));
         assertEquals("dummy value", props.getProperty("/test/test.GET.return"));
         assertEquals("dummy param", props.getProperty("/test/test.GET.param.param"));
@@ -138,7 +112,26 @@ public class SwaggerPropertiesDocletTest {
         assertEquals("param", props.getProperty("/test.POST.param.bar"));
     }
 
+    private Properties generatedProperties() throws IOException {
+        // read in the properties file created by the SwaggerPropertiesDoclet
+        InputStream inputStream = new FileInputStream(GENERATED_PROPERTY_FILE);
+        assertNotNull(inputStream);
+
+        // check that the properties match the example sources
+        Properties props = new Properties();
+        props.load(inputStream);
+        return props;
+    }
+
+    private static void deletePropertyFile() {
+        File propertyFile = new File(GENERATED_PROPERTY_FILE);
+        if (propertyFile.exists()) {
+            propertyFile.delete();
+        }
+    }
+
     public class DummyDocErrorReporter implements DocErrorReporter {
+
 
         private final StringBuilder errors = new StringBuilder();
         private final StringBuilder notices = new StringBuilder();
