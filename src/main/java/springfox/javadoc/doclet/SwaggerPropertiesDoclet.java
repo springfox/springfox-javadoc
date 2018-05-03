@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import static springfox.javadoc.doclet.DocletOptionParser.*;
+
 // the NOSONAR comment is added to ignore sonar warning about usage of Sun classes
 // because doclets can only be written using Sun classes
 
@@ -49,8 +51,6 @@ import java.util.Properties;
 public class SwaggerPropertiesDoclet {
 
     public static final String SPRINGFOX_JAVADOC_PROPERTIES = "META-INF/springfox.javadoc.properties";
-    private static final String CLASS_DIR_OPTION = "-classdir";
-    private static final String EXCEPTION_REF_OPTION = "-exceptionRef";
     private static final String REQUEST_MAPPING = "org.springframework.web.bind.annotation.RequestMapping";
     private static final String REQUEST_GET_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.GET";
     private static final String REQUEST_POST_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.POST";
@@ -85,43 +85,21 @@ public class SwaggerPropertiesDoclet {
       { REQUEST_PUT_MAPPING, "PUT" }
     };
 
+    private static DocletOptions docletOptions;
+
     private SwaggerPropertiesDoclet() {
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * See <a href=
-     * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
-     * custom command-line options</a>
-     */
-    private static String getClassDir(String[][] options) {
-        for (String[] opt : options) {
-            if (opt[0].equalsIgnoreCase(CLASS_DIR_OPTION)) {
-                return opt[1];
-            }
-        }
-        return null;
-    }
 
     /**
      * See <a href=
      * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
      * custom command-line options</a>
+     * @param option option evaluate an expected length for a given option
+     * @return number of options
      */
-    private static boolean getExceptionRef(String[][] options) {
-        for (String[] opt : options) {
-            if (opt[0].equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
-                return Boolean.valueOf(opt[1]);
-            }
-        }
-        return false;
-    }
-
-    /**
-     * See <a href=
-     * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
-     * custom command-line options</a>
-     */
+    @SuppressWarnings("WeakerAccess")
     public static int optionLength(String option) {
         int length = 0;
         if (option.equalsIgnoreCase(CLASS_DIR_OPTION)) {
@@ -137,53 +115,43 @@ public class SwaggerPropertiesDoclet {
      * See <a href=
      * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
      * custom command-line options</a>
+     * @param options command line options split as key value pairs on index 0 and 1
+     * @param reporter reporter for errors
+     * @return true if options are valid
      */
+    @SuppressWarnings("WeakerAccess")
     public static boolean validOptions(
       String[][] options,
       DocErrorReporter reporter) {
 
-        boolean foundClassDir = false;
-        boolean foundExceptionRef = false;
-        for (String[] opt : options) {
-            if (opt[0].equalsIgnoreCase(CLASS_DIR_OPTION)) {
-                if (foundClassDir) {
-                    reporter.printError("Only one -classdir option allowed.");
-                    return false;
-                } else {
-                    foundClassDir = true;
-                }
-            }
-            if (opt[0].equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
-                if (foundExceptionRef) {
-                    reporter.printError("Only one -exceptionRef option allowed.");
-                    return false;
-                } else {
-                    foundExceptionRef = true;
-                }
-            }
+        DocletOptionParser parser = new DocletOptionParser(options);
+
+        try {
+            docletOptions = parser.parse();
+            return true;
+        } catch (IllegalStateException e) {
+            reporter.printError(e.getMessage());
         }
-        if (!foundClassDir) {
-            reporter.printError(
-              "Usage: javadoc -classdir classes directory [-exceptionRef true|false (generate references to exception"
-                + " classes)] -doclet  ...");
-        }
-        return foundClassDir;
+        return false;
     }
 
     /**
      * See <a href=
      * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#simple">A
      * Simple Example Doclet</a>
+     * @param root {@link RootDoc}
+     * @return true if it started successfully
      */
+    @SuppressWarnings("unused")
     public static boolean start(RootDoc root) {
 
-        String classDir = getClassDir(root.options());
-        if (classDir == null || classDir.length() == 0) {
+        String propertyFilePath = docletOptions.getPropertyFilePath();
+        if (propertyFilePath == null || propertyFilePath.length() == 0) {
             root.printError("No output location was specified");
             return false;
         } else {
-            StringBuilder sb = new StringBuilder(classDir);
-            if (!classDir.endsWith("/")) {
+            StringBuilder sb = new StringBuilder(propertyFilePath);
+            if (!propertyFilePath.endsWith("/")) {
                 sb.append("/");
             }
             sb.append(SPRINGFOX_JAVADOC_PROPERTIES);
@@ -206,7 +174,7 @@ public class SwaggerPropertiesDoclet {
                           methodDoc,
                           defaultRequestMethod,
                           pathRoot,
-                          getExceptionRef(root.options()));
+                          docletOptions.isDocumentExceptions());
                     }
                 }
                 properties.store(javadoc, "Springfox javadoc properties");

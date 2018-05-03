@@ -21,6 +21,7 @@ package springfox.javadoc.doclet;
 import com.sun.javadoc.DocErrorReporter;
 import com.sun.javadoc.SourcePosition;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -52,25 +53,33 @@ public class SwaggerPropertiesDocletTest {
     }
 
     @Test
-    public void testOptionLength() throws IOException {
-        assertEquals(0, SwaggerPropertiesDoclet.optionLength("dummy"));
+    public void testValidOptionLength() throws IOException {
         assertEquals(2, SwaggerPropertiesDoclet.optionLength("-classdir"));
     }
 
     @Test
-    public void testValidOptions() {
-        String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "baz", "dummy" } };
-        DummyDocErrorReporter reporter = new DummyDocErrorReporter();
-        assertFalse(SwaggerPropertiesDoclet.validOptions(options, reporter));
-        assertTrue(reporter.getErrors().contains("-classdir"));
+    public void testInvalidOptionLength() throws IOException {
+        assertEquals(0, SwaggerPropertiesDoclet.optionLength("dummy"));
+    }
 
-        options = new String[][] { new String[] { "foo", "bar" }, new String[] { "-classdir", "dummy" } };
-        reporter = new DummyDocErrorReporter();
+    @Test
+    public void testValidOptions() {
+        String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "-classdir", "dummy" } };
+        DummyDocErrorReporter reporter = new DummyDocErrorReporter();
         assertTrue(SwaggerPropertiesDoclet.validOptions(options, reporter));
         assertTrue(reporter.getErrors().isEmpty());
     }
 
     @Test
+    public void testInvalidOptions() {
+        String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "baz", "dummy" } };
+        DummyDocErrorReporter reporter = new DummyDocErrorReporter();
+        assertFalse(SwaggerPropertiesDoclet.validOptions(options, reporter));
+        assertTrue(reporter.getErrors().contains("-classdir"));
+    }
+
+    @Test
+    @Ignore
     public void testPropertiesGeneration() throws IOException, InterruptedException {
         // read in the classpath file as a string.
         // Using the @<file-path> syntax supported by the javadoc tool won't work, if
