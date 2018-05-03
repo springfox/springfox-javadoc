@@ -1,0 +1,37 @@
+plugins {
+    id 'com.github.ben-manes.versions' version '0.17.0'
+    id "com.jfrog.artifactory" version "4.7.1"
+    id "com.jfrog.bintray" version "1.8.0"
+}
+
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'osgi'
+apply plugin: 'maven-publish'
+apply from: "publishing.gradle"
+
+group = 'io.springfox'
+description = """springfox-javadoc"""
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+    options.deprecation = true
+    options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'io.springfox:springfox-swagger2:2.9.0'
+    compile 'org.springframework:spring-webmvc:4.3.9.RELEASE'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.18.3'
+    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
+}

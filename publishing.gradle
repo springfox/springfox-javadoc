@@ -1,0 +1,155 @@
+import java.text.SimpleDateFormat
+
+Date buildTimeAndDate = new Date()
+
+ext {
+    buildDate = new SimpleDateFormat('yyyy-MM-dd').format(buildTimeAndDate)
+    buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildTimeAndDate)
+    projectUrl = "https://github.com/springfox/springfox-javadoc"
+    bintrayUser = project.hasProperty('bintrayUsername') ?
+        project.property('bintrayUsername') :
+        System.getenv('BINTRAY_USER_NAME')
+    bintrayApiKey = project.hasProperty('bintrayApiKey') ?
+        project.property('bintrayApiKey') :
+        System.getenv('BINTRAY_PASSWORD')
+    passphrase = project.hasProperty('gpgPassphrase') ?
+        project.property('gpgPassphrase') :
+        System.getenv('GPG_PASSPHRASE')
+    sonatypeUser = project.hasProperty('ossUser') ?
+        project.property('ossUser') :
+        System.getenv('SONATYPE_USER_NAME')
+    sonatypePassword = project.hasProperty('ossPassword') ?
+        project.property('ossPassword') :
+        System.getenv('SONATYPE_PASSWORD')
+}
+
+jar {
+    manifest {
+        attributes(
+            'Built-By': 'Springfox',
+            'Created-By': System.properties['java.version'] + " (" + System.properties['java.vendor'] + " " + System.properties['java.vm.version'] + ")",
+            'Build-Date': project.buildDate,
+            'Build-Time': project.buildTime,
+            'Specification-Title': project.name,
+            'Specification-Version': project.version,
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.name
+        )
+        //TODO: handle the package export
+//        instruction 'Export-Package', '!springfox.*.internal,*'
+        instruction 'Import-Package', "!${project.osgiManifest().symbolicName}.*,*"
+        instruction 'Bundle-Description', 'A library to generate documentation from javadocs'
+        instruction 'Bundle-DocURL', 'https://github.com/springfox/springfox-javadoc'
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+bintray {
+    user = project.bintrayUser
+    key = project.bintrayApiKey
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = true //If version should be auto published after an upload
+    publications = ['mavenJava']
+    pkg {
+        repo = 'maven-repo'
+        name = "${project.name}"
+        userOrg = "springfox"
+        websiteUrl = "${projectUrl}"
+        issueTrackerUrl = "$projectUrl/issues"
+        vcsUrl = "${projectUrl}.git"
+        desc = project.description
+        licenses = ['Apache-2.0']
+        version {
+            vcsTag = project.version
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                //Optional. The passphrase for GPG signing'
+                passphrase = project.passphrase
+            }
+            mavenCentralSync {
+                sync = true //Optional (true by default). Determines whether to sync the version to Maven Central.
+                user = project.sonatypeUser
+                password = project.sonatypePassword
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom.withXml {
+                def devs = ['dilipkrish': '',
+                            'rgoers'    : 'Ralph Goers',
+                            'neumaennl' : 'Martin Neumann']
+                def root = asNode()
+
+                root.dependencies.'*'.findAll() {
+                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
+                        dep.name == it.artifactId.text()
+                    }
+                }.each() {
+                    it.scope*.value = 'compile'
+                }
+
+                root.appendNode('name', project.name)
+                root.appendNode('packaging', 'jar')
+                root.appendNode('url', project.projectUrl)
+                root.appendNode('description', project.description)
+
+                def license = root.appendNode('licenses').appendNode('license')
+                license.appendNode('name', 'Apache-2.0')
+                license.appendNode('url', "${project.projectUrl}/LICENSE")
+                license.appendNode('distribution', 'repo')
+
+                root.appendNode('scm').appendNode('url', "${project.projectUrl}.git")
+
+                def developers = root.appendNode('developers')
+                devs.each {
+                    def d = developers.appendNode('developer')
+                    d.appendNode('id', it.key)
+                    d.appendNode('name', it.value)
+                }
+            }
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}
+
+artifactory {
+    contextUrl = 'https://oss.jfrog.org'
+    resolve {
+        repository {
+            repoKey = 'libs-release'
+            maven = true
+        }
+    }
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
+            //when using oss.jfrog.org the credentials are from Bintray. For local build we expect them to be found in
+            //~/.gradle/gradle.properties, otherwise to be set in the build server
+            username = project.bintrayUser
+            password = project.bintrayApiKey
+        }
+        defaults {
+            publications('mavenJava')
+        }
+    }
+}
