@@ -8,6 +8,7 @@ apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'osgi'
+apply plugin: 'jacoco'
 apply plugin: 'maven-publish'
 apply from: "publishing.gradle"
 
@@ -34,4 +35,15 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:2.21.0'
     compile files("${System.getProperty('java.home')}/../lib/tools.jar")
+}
+
+jacoco {
+    toolVersion = "0.8.1"
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
 }
