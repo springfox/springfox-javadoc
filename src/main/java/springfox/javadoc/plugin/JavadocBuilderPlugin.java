@@ -18,8 +18,6 @@
  */
 package springfox.javadoc.plugin;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -41,6 +39,7 @@ import springfox.javadoc.doclet.SwaggerPropertiesDoclet;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -135,12 +134,10 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
         }
     }
 
-    @VisibleForTesting
     String extractApiParamDescription(Annotation annotation) {
         return annotation != null ? annotation.annotationType().getName() : null;
     }
 
-    @VisibleForTesting
     Optional<Boolean> isParamRequired(Annotation apiParam, ParameterContext context) {
         if (apiParam != null) {
             Optional<Boolean> required = isRequired(apiParam, context);
@@ -152,24 +149,22 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
         if (annotation == null) {
             annotation = annotationFromField(context, PATH_VARIABLE);
         }
-        return annotation != null ? isRequired(annotation, context) : Optional.<Boolean>absent();
+        return annotation != null ? isRequired(annotation, context) : Optional.<Boolean>empty();
     }
 
-    @VisibleForTesting
     Optional<Boolean> isRequired(Annotation annotation, ParameterContext context) {
         for (Method method : annotation.annotationType().getDeclaredMethods()) {
             if (method.getName().equals("required")) {
                 try {
                     return Optional.of((Boolean) method.invoke(annotation, (Object) null));
                 } catch (Exception ex) {
-                    return Optional.absent();
+                    return Optional.empty();
                 }
             }
         }
-        return Optional.absent();
+        return Optional.empty();
     }
 
-    @VisibleForTesting
     boolean hasValue(Annotation annotation, ParameterContext context) {
         for (Method method : annotation.annotationType().getDeclaredMethods()) {
             if (method.getName().equals("value")) {
