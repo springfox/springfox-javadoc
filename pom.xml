@@ -79,7 +79,7 @@
     <properties>
         <java.source.version>1.8</java.source.version>
         <java.target.version>1.8</java.target.version>
-        <org.springframework.version>5.0.6.RELEASE</org.springframework.version>
+        <org.springframework.version>5.0.7.RELEASE</org.springframework.version>
         <springfox.version>3.0.0-SNAPSHOT</springfox.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
