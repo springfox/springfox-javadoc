@@ -15,8 +15,8 @@ apply from: "publishing.gradle"
 group = 'io.springfox'
 description = "springfox-javadoc"
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
@@ -30,8 +30,8 @@ repositories {
 }
 
 dependencies {
-    compile 'io.springfox:springfox-swagger2:2.9.2'
-    compile 'org.springframework:spring-webmvc:4.3.18.RELEASE'
+    compile 'io.springfox:springfox-swagger2:3.0.0-SNAPSHOT'
+    compile 'org.springframework:spring-webmvc:5.0.7.RELEASE'
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:2.21.0'
     compile files("${System.getProperty('java.home')}/../lib/tools.jar")
