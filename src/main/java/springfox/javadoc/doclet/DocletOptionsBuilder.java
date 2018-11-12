@@ -18,7 +18,7 @@
  */
 package springfox.javadoc.doclet;
 
-import com.google.common.base.Strings;
+import org.springframework.util.StringUtils;
 
 public class DocletOptionsBuilder {
     private String propertyFilePath;
@@ -35,7 +35,7 @@ public class DocletOptionsBuilder {
     }
 
     DocletOptions build() {
-        if (Strings.isNullOrEmpty(propertyFilePath)) {
+        if (StringUtils.isEmpty(propertyFilePath)) {
             throw new IllegalStateException("Usage: javadoc -classdir classes directory [-exceptionRef true|false (generate references to exception"
               + " classes)] -doclet  ...");
         }
