@@ -18,23 +18,14 @@
  */
 package springfox.javadoc.doclet;
 
-public class DocletOptions {
-    private final String propertyFilePath;
-    private final boolean documentExceptions;
+import javax.lang.model.element.AnnotationMirror;
+import java.util.Optional;
 
-    DocletOptions(
-      String propertyFilePath,
-      boolean documentExceptions) {
+class SpringMappingsHelper {
 
-        this.propertyFilePath = propertyFilePath;
-        this.documentExceptions = documentExceptions;
-    }
-
-    public String getPropertyFilePath() {
-        return propertyFilePath;
-    }
-
-    public boolean isDocumentExceptions() {
-        return documentExceptions;
+    static Optional<String> getPath(AnnotationMirror annotationMirror) {
+        return DocletHelper.getAnnotationParam(annotationMirror, "path")
+          .or(() -> DocletHelper.getAnnotationParam(annotationMirror, "value"))
+          .map(annotationValue -> annotationValue.getValue().toString());
     }
 }

@@ -18,23 +18,21 @@
  */
 package springfox.javadoc.doclet;
 
-import com.sun.javadoc.DocErrorReporter;
-import com.sun.javadoc.SourcePosition;
-import com.sun.tools.javadoc.Main;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.tools.DocumentationTool;
+import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
-import static springfox.javadoc.doclet.SwaggerPropertiesDoclet.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static springfox.javadoc.doclet.ClassDirectoryOption.SPRINGFOX_JAVADOC_PROPERTIES;
 
 public class SwaggerPropertiesDocletTest {
 
@@ -43,71 +41,39 @@ public class SwaggerPropertiesDocletTest {
       String.format("%s/%s", BUILD_PROPERTY_FILE_LOCATION, SPRINGFOX_JAVADOC_PROPERTIES);
 
     @BeforeClass
-    public static void setupFixture() {
-        deletePropertyFile();
-    }
-
-    @AfterClass
-    public static void cleanupFixture() {
-        deletePropertyFile();
-    }
-
-    @Test
-    public void testValidOptionLength() {
-        assertEquals(2, optionLength("-classdir"));
-    }
-
-    @Test
-    public void testInvalidOptionLength() {
-        assertEquals(0, optionLength("dummy"));
-    }
-
-    @Test
-    public void testValidOptions() {
-        String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "-classdir", "dummy" } };
-        DummyDocErrorReporter reporter = new DummyDocErrorReporter();
-        assertTrue(validOptions(options, reporter));
-        assertTrue(reporter.getErrors().isEmpty());
-    }
-
-    @Test
-    public void testInvalidOptions() {
-        String[][] options = new String[][] { new String[] { "foo", "bar" }, new String[] { "baz", "dummy" } };
-        DummyDocErrorReporter reporter = new DummyDocErrorReporter();
-        assertFalse(validOptions(options, reporter));
-        assertTrue(reporter.getErrors().contains("-classdir"));
+    public static void deletePropertyFile() {
+        File propertyFile = new File(GENERATED_PROPERTY_FILE);
+        if (propertyFile.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            propertyFile.delete();
+        }
     }
 
     @Test
     public void testPropertiesGeneration() throws IOException {
-
-        StringWriter err = new StringWriter();
-        StringWriter warn = new StringWriter();
-        StringWriter notice = new StringWriter();
-
+        DocumentationTool systemDocumentationTool = ToolProvider.getSystemDocumentationTool();
         String[] args = new String[] {
           "-sourcepath",
           "./src/test/java",
           "-subpackages",
-          "springfox.javadoc",
-          "springfox.javadoc",
+          "springfox.javadoc.doclet",
+          "springfox.javadoc.example",
           "-classdir",
           BUILD_PROPERTY_FILE_LOCATION
         };
+        DocumentationTool.DocumentationTask task = systemDocumentationTool.getTask(null, null, null,
+          SwaggerPropertiesDoclet.class, Arrays.asList(args), null);
 
-        Main.execute(
-          "SwaggerPropertiesDoclet",
-          new PrintWriter(err),
-          new PrintWriter(warn),
-          new PrintWriter(notice),
-          SwaggerPropertiesDoclet.class.getName(),
-          args);
+        task.call();
 
         Properties props = generatedProperties();
         assertEquals("test method", props.getProperty("/test/test.GET.notes"));
         assertEquals("dummy value", props.getProperty("/test/test.GET.return"));
         assertEquals("dummy param", props.getProperty("/test/test.GET.param.param"));
         assertEquals("without value or path", props.getProperty("/test.POST.notes"));
+        assertEquals("other without value or path", props.getProperty("/other.POST.notes"));
+        assertEquals("other without value or path other line in delete mapping", props.getProperty("/other.DELETE.notes"));
+        assertEquals("InvalidNameException-when parameter smaller than 1", props.getProperty("/other/test.GET.throws.1"));
         assertEquals("retval", props.getProperty("/test.POST.return"));
         assertEquals("param", props.getProperty("/test.POST.param.bar"));
     }
@@ -123,60 +89,4 @@ public class SwaggerPropertiesDocletTest {
         return props;
     }
 
-    private static void deletePropertyFile() {
-        File propertyFile = new File(GENERATED_PROPERTY_FILE);
-        if (propertyFile.exists()) {
-            propertyFile.delete();
-        }
-    }
-
-    public class DummyDocErrorReporter implements DocErrorReporter {
-
-
-        private final StringBuilder errors = new StringBuilder();
-        private final StringBuilder notices = new StringBuilder();
-        private final StringBuilder warnings = new StringBuilder();
-
-        @Override
-        public void printError(String error) {
-            errors.append(error).append("\n");
-        }
-
-        @Override
-        public void printError(SourcePosition position, String error) {
-            errors.append(error).append("\n");
-        }
-
-        @Override
-        public void printNotice(String notice) {
-            notices.append(notice).append("\n");
-        }
-
-        @Override
-        public void printNotice(SourcePosition position, String notice) {
-            notices.append(notice).append("\n");
-        }
-
-        @Override
-        public void printWarning(String warning) {
-            warnings.append(warning).append("\n");
-        }
-
-        @Override
-        public void printWarning(SourcePosition position, String warning) {
-            warnings.append(warning).append("\n");
-        }
-
-        public String getErrors() {
-            return errors.toString();
-        }
-
-        public String getNotices() {
-            return notices.toString();
-        }
-
-        public String getWarnings() {
-            return warnings.toString();
-        }
-    }
 }

@@ -5,18 +5,19 @@ plugins {
 }
 
 apply plugin: 'idea'
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'maven'
 apply plugin: 'osgi'
 apply plugin: 'jacoco'
 apply plugin: 'maven-publish'
 apply from: "publishing.gradle"
+apply plugin: 'checkstyle'
 
 group = 'io.springfox'
 description = "springfox-javadoc"
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.10
+targetCompatibility = 1.10
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
@@ -27,18 +28,17 @@ tasks.withType(JavaCompile) {
 repositories {
     jcenter()
     mavenCentral()
+    maven {
+        name = 'bintray-springfox-snapshot'
+        url = "http://oss.jfrog.org/oss-snapshot-local/"
+    }
 }
 
 dependencies {
-    compile 'io.springfox:springfox-swagger2:2.9.2'
-    compile 'org.springframework:spring-webmvc:4.3.18.RELEASE'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:2.21.0'
-    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
-}
-
-jacoco {
-    toolVersion = "0.8.1"
+    implementation 'io.springfox:springfox-swagger2:3.0.0-SNAPSHOT'
+    implementation 'org.springframework:spring-webmvc:5.0.7.RELEASE'
+    testImplementation 'junit:junit:4.12'
+    testImplementation  'org.mockito:mockito-core:2.21.0'
 }
 
 jacocoTestReport {
@@ -46,4 +46,8 @@ jacocoTestReport {
         xml.enabled true
         html.enabled true
     }
+}
+
+checkstyle {
+    configFile = rootProject.file('.build/checkstyle.xml')
 }

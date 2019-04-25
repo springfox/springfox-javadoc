@@ -18,26 +18,24 @@
  */
 package springfox.javadoc.doclet;
 
-import com.sun.javadoc.AnnotationDesc;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.DocErrorReporter;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.ParamTag;
-import com.sun.javadoc.RootDoc;
-import com.sun.javadoc.Tag;
-import com.sun.javadoc.ThrowsTag;
+import com.sun.source.doctree.*;
+import jdk.javadoc.doclet.Doclet;
+import jdk.javadoc.doclet.DocletEnvironment;
+import jdk.javadoc.doclet.Reporter;
 import springfox.javadoc.plugin.JavadocBuilderPlugin;
 
-import java.io.File;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Properties;
-
-import static springfox.javadoc.doclet.DocletOptionParser.*;
-
-// the NOSONAR comment is added to ignore sonar warning about usage of Sun classes
-// because doclets can only be written using Sun classes
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * Generate properties file based on Javadoc.
@@ -48,300 +46,82 @@ import static springfox.javadoc.doclet.DocletOptionParser.*;
  * @author rgoers
  * @author MartinNeumannBeTSE
  */
-public class SwaggerPropertiesDoclet {
+public class SwaggerPropertiesDoclet implements Doclet {
 
-    public static final String SPRINGFOX_JAVADOC_PROPERTIES = "META-INF/springfox.javadoc.properties";
-    private static final String REQUEST_MAPPING = "org.springframework.web.bind.annotation.RequestMapping";
-    private static final String REQUEST_GET_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.GET";
-    private static final String REQUEST_POST_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.POST";
-    private static final String REQUEST_PUT_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.PUT";
-    private static final String REQUEST_PATCH_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.PATCH";
-    private static final String REQUEST_DELETE_MAPPING = "org.springframework.web.bind.annotation.RequestMethod.DELETE";
-    private static final String DELETE_MAPPING = "org.springframework.web.bind.annotation.DeleteMapping";
-    private static final String GET_MAPPING = "org.springframework.web.bind.annotation.GetMapping";
-    private static final String PATCH_MAPPING = "org.springframework.web.bind.annotation.PatchMapping";
-    private static final String POST_MAPPING = "org.springframework.web.bind.annotation.PostMapping";
-    private static final String PUT_MAPPING = "org.springframework.web.bind.annotation.PutMapping";
-    private static final String RETURN = "@return";
-    private static final String PATH = "path";
-    private static final String VALUE = "value";
     private static final String NEWLINE = "\n";
     private static final String EMPTY = "";
-    private static final String METHOD = "method";
 
-    private static final String[] MAPPINGS = new String[] {
-      DELETE_MAPPING,
-      GET_MAPPING,
-      PATCH_MAPPING,
-      POST_MAPPING,
-      PUT_MAPPING,
-      REQUEST_MAPPING };
+    private ClassDirectoryOption classDirectoryOption = new ClassDirectoryOption();
+    private Reporter reporter;
+    private OutputStream springfoxPropertiesOutputStream;
+    private DocletEnvironment environment;
+    private MethodProcessingContextFactory methodProcessingContextFactory;
 
-    private static final String[][] REQUEST_MAPPINGS = new String[][] {
-      { REQUEST_DELETE_MAPPING, "DELETE" },
-      { REQUEST_GET_MAPPING, "GET" },
-      { REQUEST_PATCH_MAPPING, "PATCH" },
-      { REQUEST_POST_MAPPING, "POST" },
-      { REQUEST_PUT_MAPPING, "PUT" }
-    };
-
-    private static DocletOptions docletOptions;
-
-    private SwaggerPropertiesDoclet() {
-        throw new UnsupportedOperationException();
+    @Override
+    public void init(Locale locale, Reporter reporter) {
+        reporter.print(Diagnostic.Kind.NOTE, "Doclet using locale: " + locale);
+        this.reporter = reporter;
     }
 
-
-    /**
-     * See <a href=
-     * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
-     * custom command-line options</a>
-     * @param option option evaluate an expected length for a given option
-     * @return number of options
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static int optionLength(String option) {
-        int length = 0;
-        if (option.equalsIgnoreCase(CLASS_DIR_OPTION)) {
-            length = 2;
-        }
-        if (option.equalsIgnoreCase(EXCEPTION_REF_OPTION)) {
-            length = 2;
-        }
-        return length;
+    @Override
+    public String getName() {
+        return "springfox-javadoc-doclet";
     }
 
-    /**
-     * See <a href=
-     * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#options">Using
-     * custom command-line options</a>
-     * @param options command line options split as key value pairs on index 0 and 1
-     * @param reporter reporter for errors
-     * @return true if options are valid
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static boolean validOptions(
-      String[][] options,
-      DocErrorReporter reporter) {
+    @Override
+    public Set<? extends Option> getSupportedOptions() {
+        return Collections.singleton(classDirectoryOption);
+    }
 
-        DocletOptionParser parser = new DocletOptionParser(options);
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.RELEASE_9;
+    }
 
+    @Override
+    public boolean run(DocletEnvironment environment) {
+        this.environment = environment;
+        this.methodProcessingContextFactory = new MethodProcessingContextFactory(environment);
         try {
-            docletOptions = parser.parse();
+            preparePropertiesOutputStream();
+            environment.getIncludedElements()
+              .stream()
+              .filter(element -> element.getKind().isClass())
+              .map(element -> (TypeElement) element)
+              .forEach(this::processClass);
             return true;
-        } catch (IllegalStateException e) {
-            reporter.printError(e.getMessage());
+        } finally {
+            closeSpringfoxPropertiesStream();
         }
-        return false;
     }
 
-    /**
-     * See <a href=
-     * "https://docs.oracle.com/javase/8/docs/technotes/guides/javadoc/doclet/overview.html#simple">A
-     * Simple Example Doclet</a>
-     * @param root {@link RootDoc}
-     * @return true if it started successfully
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess", "UnusedReturnValue" })
-    public static boolean start(RootDoc root) {
-
-        String propertyFilePath = docletOptions.getPropertyFilePath();
-        if (propertyFilePath == null || propertyFilePath.length() == 0) {
-            root.printError("No output location was specified");
-            return false;
-        } else {
-            StringBuilder sb = new StringBuilder(propertyFilePath);
-            if (!propertyFilePath.endsWith("/")) {
-                sb.append("/");
+    private void closeSpringfoxPropertiesStream() {
+        try {
+            if (springfoxPropertiesOutputStream != null) {
+                springfoxPropertiesOutputStream.close();
             }
-            sb.append(SPRINGFOX_JAVADOC_PROPERTIES);
-            String out = sb.toString();
-            root.printNotice("Writing output to " + out);
-            File file = new File(out);
-            //noinspection ResultOfMethodCallIgnored
-            file.getParentFile().mkdirs();
-            OutputStream javadoc = null;
-            try {
-                javadoc = new FileOutputStream(file);
-                Properties properties = new Properties();
-
-                for (ClassDoc classDoc : root.classes()) {
-                    sb.setLength(0);
-                    String defaultRequestMethod = processClass(classDoc, sb);
-                    String pathRoot = sb.toString();
-                    for (MethodDoc methodDoc : classDoc.methods()) {
-                        processMethod(
-                          properties,
-                          methodDoc,
-                          defaultRequestMethod,
-                          pathRoot,
-                          docletOptions.isDocumentExceptions());
-                    }
-                }
-                properties.store(javadoc, "Springfox javadoc properties");
-            } catch (IOException e) {
-                root.printError(e.getMessage());
-            } finally {
-                if (javadoc != null) {
-                    try {
-                        javadoc.close();
-                    } catch (IOException e) {
-                        // close for real
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    private static String processClass(
-      ClassDoc classDoc,
-      StringBuilder pathRoot) {
-
-        String defaultRequestMethod = null;
-        for (AnnotationDesc annotationDesc : classDoc.annotations()) {
-            if (REQUEST_MAPPING.equals(annotationDesc.annotationType().qualifiedTypeName())) {
-                for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
-
-                    if (VALUE.equals(pair.element().name()) || PATH.equals(pair.element().name())) {
-                        setRoot(pathRoot, pair);
-                    }
-                    if (METHOD.equals(pair.element().name())) {
-                        defaultRequestMethod = pair.value().toString();
-                    }
-                }
-                break;
-            }
-        }
-        return defaultRequestMethod;
-    }
-
-    private static void setRoot(
-      StringBuilder pathRoot,
-      AnnotationDesc.ElementValuePair pair) {
-
-        String value = pair.value().toString().replaceAll("\"$|^\"", "");
-        if (!value.startsWith("/")) {
-            pathRoot.append("/");
-        }
-        if (value.endsWith("/")) {
-            pathRoot.append(value, 0, value.length() - 1);
-        } else {
-            pathRoot.append(value);
+        } catch (IOException e) {
+            reporter.print(Diagnostic.Kind.WARNING, "Could not close output stream: " + e.getMessage());
         }
     }
 
-    private static void processMethod(
-      Properties properties,
-      MethodDoc methodDoc,
-      String defaultRequestMethod,
-      String pathRoot,
-      boolean exceptionRef) {
-
-        for (AnnotationDesc annotationDesc : methodDoc.annotations()) {
-            String annotationType = annotationDesc.annotationType().toString();
-            if (isMapping(annotationType)) {
-                StringBuilder path = new StringBuilder(pathRoot);
-                for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
-                    if (VALUE.equals(pair.element().name()) || PATH.equals(pair.element().name())) {
-                        appendPath(path, pair);
-                        break;
-                    }
-                }
-                if (!path.substring(path.length() - 1).equals(".")) {
-                    path.append(".");
-                }
-                String requestMethod = getRequestMethod(annotationDesc, annotationType, defaultRequestMethod);
-                if (requestMethod != null) {
-                    path.append(requestMethod);
-                    saveProperty(properties, path.toString() + ".notes", methodDoc.commentText());
-
-                    for (ParamTag paramTag : methodDoc.paramTags()) {
-                        saveProperty(properties, path.toString() + ".param." + paramTag.parameterName(),
-                          paramTag.parameterComment());
-                    }
-                    for (Tag tag : methodDoc.tags()) {
-                        if (tag.name().equals(RETURN)) {
-                            saveProperty(properties, path.toString() + ".return", tag.text());
-                            break;
-                        }
-                    }
-                    if (exceptionRef) {
-                        processThrows(properties, methodDoc.throwsTags(), path);
-                    }
-                }
-            }
+    private void preparePropertiesOutputStream() {
+        Path outputFile = classDirectoryOption.getClassDirectory();
+        reporter.print(Diagnostic.Kind.NOTE, "Writing output to " + outputFile.toAbsolutePath().toString());
+        try {
+            Files.createDirectories(outputFile.getParent());
+            springfoxPropertiesOutputStream = new FileOutputStream(classDirectoryOption.getClassDirectory().toFile());
+        } catch (IOException e) {
+            throw new SpringfoxDocletException(e);
         }
     }
 
-    private static void appendPath(
-      StringBuilder path,
-      AnnotationDesc.ElementValuePair pair) {
-
-        String value = pair.value().toString().replaceAll("\"$|^\"", "");
+    private static void appendPath(StringBuilder rootPath, String path) {
+        String value = path.replaceAll("\"$|^\"", "");
         if (value.startsWith("/")) {
-            path.append(value).append(".");
+            rootPath.append(value).append(".");
         } else {
-            path.append("/").append(value).append(".");
-        }
-    }
-
-    private static boolean isMapping(String name) {
-        for (String mapping : MAPPINGS) {
-            if (mapping.equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static String getRequestMethod(
-      AnnotationDesc annotationDesc,
-      String name,
-      String defaultRequestMethod) {
-
-        if (REQUEST_MAPPING.equals(name)) {
-            for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
-                if (METHOD.equals(pair.element().name())) {
-                    return resolveRequestMethod(pair, defaultRequestMethod);
-                }
-            }
-        } else if (PUT_MAPPING.equals(name)) {
-            return "PUT";
-        } else if (POST_MAPPING.equals(name)) {
-            return "POST";
-        } else if (PATCH_MAPPING.equals(name)) {
-            return "PATCH";
-        } else if (GET_MAPPING.equals(name)) {
-            return "GET";
-        } else if (DELETE_MAPPING.equals(name)) {
-            return "DELETE";
-        }
-        return defaultRequestMethod;
-    }
-
-    private static String resolveRequestMethod(
-      AnnotationDesc.ElementValuePair pair,
-      String defaultRequestMethod) {
-
-        String value = pair.value().toString();
-        for (String[] each : REQUEST_MAPPINGS) {
-            if (each[0].equals(value)) {
-                return each[1];
-            }
-        }
-        return defaultRequestMethod;
-    }
-
-    private static void processThrows(
-      Properties properties,
-      ThrowsTag[] throwsTags,
-      StringBuilder path) {
-
-        for (int i = 0; i < throwsTags.length; i++) {
-            String key = path.toString() + ".throws." + i;
-            String value = throwsTags[i].exceptionType().typeName() + "-" + throwsTags[i].exceptionComment();
-            saveProperty(properties, key, value);
+            rootPath.append("/").append(value).append(".");
         }
     }
 
@@ -354,5 +134,71 @@ public class SwaggerPropertiesDoclet {
         if (value.length() > 0) {
             properties.setProperty(key, value);
         }
+    }
+
+    private void processClass(TypeElement typeElement) {
+        methodProcessingContextFactory.from(typeElement)
+          .ifPresent(methodProcessingContext -> {
+              Properties properties = new Properties();
+              environment.getElementUtils().getAllMembers(typeElement).stream()
+                .filter(element -> element.getKind() == ElementKind.METHOD)
+                .forEach(methodElement -> this.processMethod(properties, methodProcessingContext, methodElement));
+              storeProperties(properties);
+          });
+    }
+
+    private void storeProperties(Properties properties) {
+        try {
+            properties.store(springfoxPropertiesOutputStream, "Springfox javadoc properties");
+        } catch (IOException e) {
+            throw new SpringfoxDocletException(e);
+        }
+    }
+
+    private void processMethod(Properties properties, MethodProcessingContext methodProcessingContext,
+                               Element methodElement) {
+        for (AnnotationMirror annotationMirror : environment.getElementUtils().getAllAnnotationMirrors(methodElement)) {
+            if (SpringRequestMappings.isMapping(annotationMirror)) {
+                String path = getMappingFullPath(methodProcessingContext, annotationMirror);
+                String requestMethod = SpringRequestMappings.getRequestMethod(annotationMirror,
+                  methodProcessingContext.getDefaultRequestMethod());
+                if (requestMethod != null) {
+                    path = path + requestMethod;
+                    DocCommentTree docCommentTree = environment.getDocTrees().getDocCommentTree(methodElement);
+                    saveProperty(properties, path + ".notes", docCommentTree.getFullBody().toString());
+                    int throwIndex = 0;
+                    for (DocTree docTree : docCommentTree.getBlockTags()) {
+                        if (docTree instanceof ParamTree) {
+                            ParamTree paramTree = (ParamTree) docTree;
+                            saveProperty(properties, path + ".param." + paramTree.getName(),
+                              paramTree.getDescription().toString());
+                        }
+                        if (docTree instanceof ReturnTree) {
+                            ReturnTree returnTree = (ReturnTree) docTree;
+                            saveProperty(properties, path + ".return", returnTree.getDescription().toString());
+                        }
+                        if (docTree instanceof ThrowsTree) {
+                            ThrowsTree throwTree = (ThrowsTree) docTree;
+                            String key = path + ".throws." + throwIndex;
+                            String value =
+                              throwTree.getExceptionName().getSignature() + "-" + throwTree.getDescription().toString();
+                            saveProperty(properties, key, value);
+                            throwIndex++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private String getMappingFullPath(MethodProcessingContext methodProcessingContext,
+                                      AnnotationMirror annotationMirror) {
+        StringBuilder path = new StringBuilder(methodProcessingContext.getRootPath());
+        Optional<String> mappingPath = SpringMappingsHelper.getPath(annotationMirror);
+        mappingPath.ifPresent(mappingAnnotationPath -> appendPath(path, mappingAnnotationPath));
+        if (!path.substring(path.length() - 1).equals(".")) {
+            path.append(".");
+        }
+        return path.toString();
     }
 }
