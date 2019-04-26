@@ -16,6 +16,13 @@ Only Java9+ is supported.
 
 Spring MVC is supported but not SpringWebFlux.
 
+# How does it work?
+
+The Javadoc is extracted using a custom Doclet which is passed to the javadoc tool.
+The Javadoc is stored in a file which must be on the classpath of the application.
+
+At runtime, this file is read by a bunch of Springfox plugins to customize the Documentation model.
+
 # Howe to use?
 
 ## Gradle Spring Boot example
@@ -54,7 +61,6 @@ Spring MVC is supported but not SpringWebFlux.
 
 ## TODO
 
-- Develop plugin to retrieve javadoc for the model properties also
 - Prefix generated properties with common prefix (like io.springfox.javadoc)  
 
 ## License
