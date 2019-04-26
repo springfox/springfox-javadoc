@@ -10,6 +10,7 @@ allprojects {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'idea'
     apply plugin: 'java-library'
+    apply plugin: 'maven'
 
     group = 'io.springfox'
 
