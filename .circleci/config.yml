@@ -41,7 +41,7 @@ jobs:
            mkdir -p ~/junit/
            mkdir -p ~/reports/
            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-           cp -R build/reports/tests ~/reports
+           cp -R springfox-javadoc/build/reports/tests ~/reports
           when: always
       - store_test_results:
           path: ~/junit
