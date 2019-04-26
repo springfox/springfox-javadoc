@@ -1,3 +1,4 @@
+
 /*
  *
  *  Copyright 2018-2019 the original author or authors.
@@ -18,28 +19,29 @@
  */
 package springfox.javadoc.example;
 
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-
 /**
- * Manage unicorns across the coolest place in the universe.
+ * Unicorns can also have children !
  */
-@RestController
-@RequestMapping(path = "/unicorns")
-public class UnicornController {
-
-    private Map<String, Unicorn> unicorns = Map.of("Poppy", new Unicorn("Poppy", "Poppy The Mighty", new UnicornChild("Baby")));
+@SuppressWarnings("unused")
+public class UnicornChild {
 
     /**
-     * Retrieve unicorn by their name (try with Poppy)
-     *
-     * @param unicornName the unicorn name
-     * @return the unicorn!
+     * The baby name. Take care choosing the right one.
      */
-    @GetMapping("/{unicornName}")
-    public Unicorn findUnicorn(@PathVariable String unicornName) {
-        return unicorns.get(unicornName);
+    private String childName;
+
+    UnicornChild(String childName) {
+        this.childName = childName;
     }
 
+    public UnicornChild() {
+    }
+
+    public String getChildName() {
+        return childName;
+    }
+
+    public void setChildName(String childName) {
+        this.childName = childName;
+    }
 }

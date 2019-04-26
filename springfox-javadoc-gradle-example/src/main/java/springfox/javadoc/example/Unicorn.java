@@ -21,6 +21,7 @@ package springfox.javadoc.example;
 /**
  * A beautiful unicorn
  */
+@SuppressWarnings("unused")
 public class Unicorn {
     /**
      * Unicorn name.
@@ -30,10 +31,15 @@ public class Unicorn {
      * Unicorn magic name (use with care!)
      */
     private String magicName;
+    /**
+     * A magical unicorn child, they can only have one, that's why they have disappeared
+     */
+    private UnicornChild unicornChild;
 
-    Unicorn(String name, String magicName) {
+    Unicorn(String name, String magicName, UnicornChild unicornChild) {
         this.name = name;
         this.magicName = magicName;
+        this.unicornChild = unicornChild;
     }
 
     public Unicorn() {
@@ -53,5 +59,13 @@ public class Unicorn {
 
     public void setMagicName(String magicName) {
         this.magicName = magicName;
+    }
+
+    public UnicornChild getUnicornChild() {
+        return unicornChild;
+    }
+
+    public void setUnicornChild(UnicornChild unicornChild) {
+        this.unicornChild = unicornChild;
     }
 }
