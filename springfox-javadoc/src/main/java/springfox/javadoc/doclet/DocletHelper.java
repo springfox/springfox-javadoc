@@ -22,7 +22,6 @@ import com.sun.source.doctree.DocCommentTree;
 import jdk.javadoc.doclet.DocletEnvironment;
 
 import javax.lang.model.element.*;
-import javax.swing.text.html.Option;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
