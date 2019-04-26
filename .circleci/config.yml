@@ -45,8 +45,10 @@ jobs:
           when: always
       - store_test_results:
           path: ~/junit
-      - store_reports:
-          path: ~/reports
+      - store_artifacts:
+            path: ~/junit
+      - store_artifacts:
+            path: ~/reports
       - deploy:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
