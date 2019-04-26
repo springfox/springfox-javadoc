@@ -18,10 +18,10 @@
  */
 package springfox.javadoc.example;
 
-import org.springframework.web.bind.annotation.*;
-
-import javax.naming.InvalidNameException;
-import java.io.IOException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Service to retrieve secret agents (could replace M in the future).
