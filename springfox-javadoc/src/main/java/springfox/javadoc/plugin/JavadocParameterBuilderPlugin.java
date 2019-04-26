@@ -18,27 +18,19 @@
  */
 package springfox.javadoc.plugin;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import springfox.documentation.builders.ResponseMessageBuilder;
-import springfox.documentation.schema.ModelRef;
-import springfox.documentation.schema.ModelReference;
 import springfox.documentation.service.ResolvedMethodParameter;
-import springfox.documentation.service.ResponseMessage;
 import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spi.service.OperationBuilderPlugin;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
-import springfox.documentation.spi.service.contexts.OperationContext;
 import springfox.documentation.spi.service.contexts.ParameterContext;
 import springfox.javadoc.doclet.SwaggerPropertiesDoclet;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
+
+import static springfox.javadoc.plugin.AnnotationHelper.hasValue;
 
 /**
  * Plugin to generate the @ApiParam and @ApiOperation values from the properties
@@ -48,8 +40,7 @@ import java.util.Set;
  * @author MartinNeumannBeTSE
  */
 @Component
-@Order
-public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBuilderPlugin {
+public class JavadocParameterBuilderPlugin implements ParameterBuilderPlugin {
 
     private static final String PERIOD = ".";
     private static final String API_PARAM = "io.swagger.annotations.ApiParam";
@@ -57,7 +48,7 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
     private static final String PATH_VARIABLE = "org.springframework.web.bind.annotation.PathVariable";
     private final Environment environment;
 
-    public JavadocBuilderPlugin(Environment environment) {
+    public JavadocParameterBuilderPlugin(Environment environment) {
         this.environment = environment;
     }
 
@@ -77,41 +68,6 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
     @Override
     public boolean supports(DocumentationType delimiter) {
         return true;
-    }
-
-    @Override
-    public void apply(OperationContext context) {
-
-        String notes = context.requestMappingPattern() + PERIOD + context.httpMethod().toString() + ".notes";
-        if (StringUtils.hasText(notes) && StringUtils.hasText(environment.getProperty(notes))) {
-            context.operationBuilder().notes("<b>" + context.getName() + "</b><br/>" + environment.getProperty(notes));
-        }
-        String returnDescription = context.requestMappingPattern() + PERIOD + context.httpMethod().toString()
-          + ".return";
-        if (StringUtils.hasText(returnDescription) && StringUtils.hasText(environment.getProperty(returnDescription))) {
-            context.operationBuilder().summary("returns " + environment.getProperty(returnDescription));
-        }
-        String throwsDescription = context.requestMappingPattern() + PERIOD + context.httpMethod().toString()
-          + ".throws.";
-        int i = 0;
-        Set<ResponseMessage> responseMessages = new HashSet<>();
-        while (StringUtils.hasText(throwsDescription + i)
-          && StringUtils.hasText(environment.getProperty(throwsDescription + i))) {
-            String[] throwsValues = StringUtils.split(environment.getProperty(throwsDescription + i), "-");
-            if (throwsValues!= null && throwsValues.length == 2) {
-                // TODO[MN]: proper mapping once
-                // https://github.com/springfox/springfox/issues/521 is solved
-                String thrownExceptionName = throwsValues[0];
-                String throwComment = throwsValues[1];
-                ModelReference model = new ModelRef(thrownExceptionName);
-                ResponseMessage message = new ResponseMessageBuilder().code(500).message(throwComment)
-                  .responseModel(model).build();
-                responseMessages.add(message);
-            }
-            i++;
-        }
-        context.operationBuilder().responseMessages(responseMessages);
-
     }
 
     @Override
@@ -160,16 +116,4 @@ public class JavadocBuilderPlugin implements OperationBuilderPlugin, ParameterBu
         return java.util.Optional.empty();
     }
 
-    private boolean hasValue(Annotation annotation) {
-        for (Method method : annotation.annotationType().getDeclaredMethods()) {
-            if (method.getName().equals("value")) {
-                try {
-                    method.invoke(annotation, (Object) null);
-                } catch (Exception ex) {
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
 }

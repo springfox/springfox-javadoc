@@ -1,0 +1,26 @@
+apply plugin: 'maven'
+apply plugin: 'osgi'
+apply plugin: 'jacoco'
+apply plugin: 'maven-publish'
+apply from: "publishing.gradle"
+apply plugin: 'checkstyle'
+
+description = "springfox-javadoc"
+
+dependencies {
+    implementation 'io.springfox:springfox-swagger2:3.0.0-SNAPSHOT'
+    implementation 'org.springframework:spring-webmvc:5.0.7.RELEASE'
+    testImplementation 'junit:junit:4.12'
+    testImplementation  'org.mockito:mockito-core:2.21.0'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+}
+
+checkstyle {
+    configFile = rootProject.file('.build/checkstyle.xml')
+}

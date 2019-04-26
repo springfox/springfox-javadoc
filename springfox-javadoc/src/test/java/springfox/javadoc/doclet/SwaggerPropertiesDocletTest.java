@@ -20,6 +20,7 @@ package springfox.javadoc.doclet;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import springfox.javadoc.example.TestController;
 
 import javax.tools.DocumentationTool;
 import javax.tools.ToolProvider;
@@ -58,6 +59,14 @@ public class SwaggerPropertiesDocletTest {
           "-subpackages",
           "springfox.javadoc.doclet",
           "springfox.javadoc.example",
+          "-d",
+          "whatever not used just to show compatibility",
+          "-author",
+          "whatever not used just to show compatibility",
+          "-doctitle",
+          "whatever not used just to show compatibility",
+          "-windowtitle",
+          "whatever not used just to show compatibility",
           "-classdir",
           BUILD_PROPERTY_FILE_LOCATION
         };
@@ -67,6 +76,7 @@ public class SwaggerPropertiesDocletTest {
         task.call();
 
         Properties props = generatedProperties();
+        assertEquals("test controller class", props.getProperty(TestController.class.getName()));
         assertEquals("test method", props.getProperty("/test/test.GET.notes"));
         assertEquals("dummy value", props.getProperty("/test/test.GET.return"));
         assertEquals("dummy param", props.getProperty("/test/test.GET.param.param"));

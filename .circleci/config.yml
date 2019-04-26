@@ -54,7 +54,8 @@ jobs:
       - deploy:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./gradlew artifactoryPublish -x check
+              cd springfox-javadoc
+              ../gradlew artifactoryPublish -x check
             fi
 notify:
   webhooks:

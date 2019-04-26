@@ -18,9 +18,11 @@
  */
 package springfox.javadoc.doclet;
 
+import com.sun.source.doctree.DocCommentTree;
 import jdk.javadoc.doclet.DocletEnvironment;
 
 import javax.lang.model.element.*;
+import javax.swing.text.html.Option;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -57,6 +59,15 @@ class DocletHelper {
             }
         }
         return Optional.empty();
+    }
+
+    static Optional<String> getTypeElementDoc(DocletEnvironment docletEnvironment, TypeElement typeElement) {
+        DocCommentTree docCommentTree = docletEnvironment.getDocTrees().getDocCommentTree(typeElement);
+        if (docCommentTree != null) {
+            return Optional.of(docCommentTree.getFullBody().toString());
+        } else {
+            return Optional.empty();
+        }
     }
 
 }

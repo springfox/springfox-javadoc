@@ -22,7 +22,7 @@ import com.sun.source.doctree.*;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
-import springfox.javadoc.plugin.JavadocBuilderPlugin;
+import springfox.javadoc.plugin.JavadocParameterBuilderPlugin;
 
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
@@ -41,7 +41,7 @@ import java.util.*;
  * Generate properties file based on Javadoc.
  * <p>
  * The generated properties file will then be read by the
- * {@link JavadocBuilderPlugin} to enhance the Swagger documentation.
+ * {@link JavadocParameterBuilderPlugin} to enhance the Swagger documentation.
  *
  * @author rgoers
  * @author MartinNeumannBeTSE
@@ -57,6 +57,26 @@ public class SwaggerPropertiesDoclet implements Doclet {
     private DocletEnvironment environment;
     private MethodProcessingContextFactory methodProcessingContextFactory;
 
+    private static void appendPath(StringBuilder rootPath, String path) {
+        String value = path.replaceAll("\"$|^\"", "");
+        if (value.startsWith("/")) {
+            rootPath.append(value).append(".");
+        } else {
+            rootPath.append("/").append(value).append(".");
+        }
+    }
+
+    private static void saveProperty(
+      Properties properties,
+      String key,
+      String value) {
+
+        value = value.replaceAll(NEWLINE, EMPTY);
+        if (value.length() > 0) {
+            properties.setProperty(key, value);
+        }
+    }
+
     @Override
     public void init(Locale locale, Reporter reporter) {
         reporter.print(Diagnostic.Kind.NOTE, "Doclet using locale: " + locale);
@@ -70,7 +90,10 @@ public class SwaggerPropertiesDoclet implements Doclet {
 
     @Override
     public Set<? extends Option> getSupportedOptions() {
-        return Collections.singleton(classDirectoryOption);
+        return new HashSet<>(Arrays.asList(new DummyOption(1, "-doctitle"),
+          new DummyOption(1, "-windowtitle"),
+          new DummyOption(1, "-author"), new DummyOption(1, "-d"),
+          classDirectoryOption));
     }
 
     @Override
@@ -116,40 +139,23 @@ public class SwaggerPropertiesDoclet implements Doclet {
         }
     }
 
-    private static void appendPath(StringBuilder rootPath, String path) {
-        String value = path.replaceAll("\"$|^\"", "");
-        if (value.startsWith("/")) {
-            rootPath.append(value).append(".");
-        } else {
-            rootPath.append("/").append(value).append(".");
-        }
-    }
-
-    private static void saveProperty(
-      Properties properties,
-      String key,
-      String value) {
-
-        value = value.replaceAll(NEWLINE, EMPTY);
-        if (value.length() > 0) {
-            properties.setProperty(key, value);
-        }
-    }
-
     private void processClass(TypeElement typeElement) {
+        Properties properties = new Properties();
+        DocletHelper.getTypeElementDoc(environment, typeElement).ifPresent(typeElementDoc  -> {
+            properties.put(typeElement.getQualifiedName().toString(), typeElementDoc);
+        });
         methodProcessingContextFactory.from(typeElement)
           .ifPresent(methodProcessingContext -> {
-              Properties properties = new Properties();
               environment.getElementUtils().getAllMembers(typeElement).stream()
                 .filter(element -> element.getKind() == ElementKind.METHOD)
                 .forEach(methodElement -> this.processMethod(properties, methodProcessingContext, methodElement));
-              storeProperties(properties);
           });
+        storeProperties(typeElement, properties);
     }
 
-    private void storeProperties(Properties properties) {
+    private void storeProperties(TypeElement typeElement, Properties properties) {
         try {
-            properties.store(springfoxPropertiesOutputStream, "Springfox javadoc properties");
+            properties.store(springfoxPropertiesOutputStream, "Class = "+typeElement.getQualifiedName().toString());
         } catch (IOException e) {
             throw new SpringfoxDocletException(e);
         }

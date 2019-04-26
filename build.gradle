@@ -4,50 +4,31 @@ plugins {
     id "com.jfrog.bintray" version "1.8.4"
 }
 
-apply plugin: 'idea'
-apply plugin: 'java-library'
-apply plugin: 'maven'
-apply plugin: 'osgi'
-apply plugin: 'jacoco'
-apply plugin: 'maven-publish'
-apply from: "publishing.gradle"
-apply plugin: 'checkstyle'
+allprojects {
+    apply plugin: 'com.github.ben-manes.versions'
+    apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'idea'
+    apply plugin: 'java-library'
 
-group = 'io.springfox'
-description = "springfox-javadoc"
+    group = 'io.springfox'
 
-sourceCompatibility = 1.10
-targetCompatibility = 1.10
+    sourceCompatibility = 1.9
+    targetCompatibility = 1.9
 
-tasks.withType(JavaCompile) {
-	options.encoding = 'UTF-8'
-    options.deprecation = true
-    options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
-}
-
-repositories {
-    jcenter()
-    mavenCentral()
-    maven {
-        name = 'bintray-springfox-snapshot'
-        url = "http://oss.jfrog.org/oss-snapshot-local/"
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        options.deprecation = true
+        options.compilerArgs += ["-Xlint:unchecked", "-parameters"]
     }
-}
 
-dependencies {
-    implementation 'io.springfox:springfox-swagger2:3.0.0-SNAPSHOT'
-    implementation 'org.springframework:spring-webmvc:5.0.7.RELEASE'
-    testImplementation 'junit:junit:4.12'
-    testImplementation  'org.mockito:mockito-core:2.21.0'
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled true
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven {
+            name = 'bintray-springfox-snapshot'
+            url = "http://oss.jfrog.org/oss-snapshot-local/"
+        }
     }
-}
 
-checkstyle {
-    configFile = rootProject.file('.build/checkstyle.xml')
 }
