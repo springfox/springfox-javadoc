@@ -45,11 +45,7 @@ jobs:
           when: always
       - store_test_results:
           path: ~/junit
-      - store_test_results:
-          path: ~/reports
-      - store_artifacts:
-          path: ~/junit
-      - store_artifacts:
+      - store_reports:
           path: ~/reports
       - deploy:
           command: |
