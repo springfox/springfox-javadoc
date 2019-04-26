@@ -20,6 +20,7 @@ package springfox.javadoc.doclet;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import springfox.javadoc.example.SecretAgent;
 import springfox.javadoc.example.TestController;
 
 import javax.tools.DocumentationTool;
@@ -77,6 +78,8 @@ public class SwaggerPropertiesDocletTest {
 
         Properties props = generatedProperties();
         assertEquals("test controller class", props.getProperty(TestController.class.getName()));
+        assertEquals("Secret Agent, it can be James Bond!", props.getProperty(SecretAgent.class.getName()));
+        assertEquals("Secret agent name, probably something badass", props.getProperty(SecretAgent.class.getName()+".secretAgentName"));
         assertEquals("test method", props.getProperty("/test/test.GET.notes"));
         assertEquals("dummy value", props.getProperty("/test/test.GET.return"));
         assertEquals("dummy param", props.getProperty("/test/test.GET.param.param"));

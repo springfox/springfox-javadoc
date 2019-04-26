@@ -51,4 +51,14 @@ public class JavadocPluginConfiguration {
     public JavadocParameterBuilderPlugin javadocParameterBuilderPlugin(Environment environment) {
         return new JavadocParameterBuilderPlugin(environment);
     }
+
+    @Bean
+    public JavadocModelBuilderPlugin javadocModelBuilderPlugin(Environment environment) {
+        return new JavadocModelBuilderPlugin(environment);
+    }
+
+    @Bean
+    public JavadocModelPropertyBuilderPlugin javadocModelPropertyBuilderPlugin(Environment environment) {
+        return new JavadocModelPropertyBuilderPlugin(environment);
+    }
 }

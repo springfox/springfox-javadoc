@@ -19,12 +19,10 @@
 package springfox.javadoc.plugin;
 
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.ApiListingBuilderPlugin;
 import springfox.documentation.spi.service.contexts.ApiListingContext;
 
-@Component
 public class JavadocApiListingBuilderPlugin implements ApiListingBuilderPlugin {
 
     private Environment environment;
@@ -35,7 +33,6 @@ public class JavadocApiListingBuilderPlugin implements ApiListingBuilderPlugin {
 
     @Override
     public void apply(ApiListingContext apiListingContext) {
-
         apiListingContext.getResourceGroup().getControllerClass().ifPresent(controllerClass -> {
             String notes = environment.getProperty(controllerClass.getName());
             if (notes != null) {

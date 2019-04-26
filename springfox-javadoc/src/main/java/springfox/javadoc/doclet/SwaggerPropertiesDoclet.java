@@ -25,10 +25,7 @@ import jdk.javadoc.doclet.Reporter;
 import springfox.javadoc.plugin.JavadocParameterBuilderPlugin;
 
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.tools.Diagnostic;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -141,16 +138,39 @@ public class SwaggerPropertiesDoclet implements Doclet {
 
     private void processClass(TypeElement typeElement) {
         Properties properties = new Properties();
-        DocletHelper.getTypeElementDoc(environment, typeElement).ifPresent(typeElementDoc  -> {
-            properties.put(typeElement.getQualifiedName().toString(), typeElementDoc);
-        });
+        storeClassJavadocAsProperty(typeElement, properties);
+        storeClassFieldJavadocAsProperties(typeElement, properties);
+        storeClassMethodAsProperties(typeElement, properties);
+        storeProperties(typeElement, properties);
+    }
+
+    private void storeClassFieldJavadocAsProperties(TypeElement typeElement, Properties properties) {
+        for (Element classMember : environment.getElementUtils().getAllMembers(typeElement)) {
+            if(classMember.getKind().isField()){
+                VariableElement variableElement = (VariableElement) classMember;
+                DocletHelper.getElementDoc(environment, variableElement)
+                  .ifPresent(variableDoc -> properties.put(typeElement.getQualifiedName().toString()+"."+variableElement.getSimpleName().toString(), variableDoc));
+            }
+        }
+    }
+
+    /**
+     * For Legacy only methods with request mappings are handled.
+     * This could be change to store the javadoc for all to be more generic and have
+     * simpler logic.
+     */
+    private void storeClassMethodAsProperties(TypeElement typeElement, Properties properties) {
         methodProcessingContextFactory.from(typeElement)
           .ifPresent(methodProcessingContext -> {
               environment.getElementUtils().getAllMembers(typeElement).stream()
                 .filter(element -> element.getKind() == ElementKind.METHOD)
                 .forEach(methodElement -> this.processMethod(properties, methodProcessingContext, methodElement));
           });
-        storeProperties(typeElement, properties);
+    }
+
+    private void storeClassJavadocAsProperty(TypeElement typeElement, Properties properties) {
+        DocletHelper.getElementDoc(environment, typeElement)
+          .ifPresent(typeElementDoc  -> properties.put(typeElement.getQualifiedName().toString(), typeElementDoc));
     }
 
     private void storeProperties(TypeElement typeElement, Properties properties) {

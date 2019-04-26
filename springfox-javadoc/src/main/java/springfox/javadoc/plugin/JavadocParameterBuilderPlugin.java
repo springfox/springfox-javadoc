@@ -39,7 +39,6 @@ import static springfox.javadoc.plugin.AnnotationHelper.hasValue;
  * @author rgoers
  * @author MartinNeumannBeTSE
  */
-@Component
 public class JavadocParameterBuilderPlugin implements ParameterBuilderPlugin {
 
     private static final String PERIOD = ".";

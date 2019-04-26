@@ -60,7 +60,7 @@ class DocletHelper {
         return Optional.empty();
     }
 
-    static Optional<String> getTypeElementDoc(DocletEnvironment docletEnvironment, TypeElement typeElement) {
+    static Optional<String> getElementDoc(DocletEnvironment docletEnvironment, Element typeElement) {
         DocCommentTree docCommentTree = docletEnvironment.getDocTrees().getDocCommentTree(typeElement);
         if (docCommentTree != null) {
             return Optional.of(docCommentTree.getFullBody().toString());
