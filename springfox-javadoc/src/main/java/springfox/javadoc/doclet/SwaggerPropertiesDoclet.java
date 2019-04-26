@@ -146,10 +146,14 @@ public class SwaggerPropertiesDoclet implements Doclet {
 
     private void storeClassFieldJavadocAsProperties(TypeElement typeElement, Properties properties) {
         for (Element classMember : environment.getElementUtils().getAllMembers(typeElement)) {
-            if(classMember.getKind().isField()){
+            if (classMember.getKind().isField()) {
                 VariableElement variableElement = (VariableElement) classMember;
                 DocletHelper.getElementDoc(environment, variableElement)
-                  .ifPresent(variableDoc -> properties.put(typeElement.getQualifiedName().toString()+"."+variableElement.getSimpleName().toString(), variableDoc));
+                  .ifPresent(variableDoc -> {
+                      String classKey =
+                        typeElement.getQualifiedName().toString() + "." + variableElement.getSimpleName().toString();
+                      properties.put(classKey, variableDoc);
+                  });
             }
         }
     }
@@ -170,12 +174,12 @@ public class SwaggerPropertiesDoclet implements Doclet {
 
     private void storeClassJavadocAsProperty(TypeElement typeElement, Properties properties) {
         DocletHelper.getElementDoc(environment, typeElement)
-          .ifPresent(typeElementDoc  -> properties.put(typeElement.getQualifiedName().toString(), typeElementDoc));
+          .ifPresent(typeElementDoc -> properties.put(typeElement.getQualifiedName().toString(), typeElementDoc));
     }
 
     private void storeProperties(TypeElement typeElement, Properties properties) {
         try {
-            properties.store(springfoxPropertiesOutputStream, "Class = "+typeElement.getQualifiedName().toString());
+            properties.store(springfoxPropertiesOutputStream, "Class = " + typeElement.getQualifiedName().toString());
         } catch (IOException e) {
             throw new SpringfoxDocletException(e);
         }

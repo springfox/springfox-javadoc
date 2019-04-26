@@ -19,7 +19,6 @@
 package springfox.javadoc.plugin;
 
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import springfox.documentation.builders.ResponseMessageBuilder;
 import springfox.documentation.schema.ModelRef;

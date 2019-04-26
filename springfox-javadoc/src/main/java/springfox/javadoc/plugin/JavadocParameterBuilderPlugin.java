@@ -19,7 +19,6 @@
 package springfox.javadoc.plugin;
 
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 import springfox.documentation.service.ResolvedMethodParameter;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.ParameterBuilderPlugin;
