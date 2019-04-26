@@ -1,1 +1,4 @@
-rootProject.name = 'springfox-javadoc'
+rootProject.name = 'springfox-javadoc-root'
+
+include "springfox-javadoc"
+include "springfox-javadoc-gradle-example"

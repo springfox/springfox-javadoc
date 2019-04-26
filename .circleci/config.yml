@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/code
     docker:
-      - image: circleci/openjdk:8-jdk-node-browsers
+      - image: circleci/openjdk:9-jdk-node-browsers
     environment:
       JVM_OPTIONS: -Xmx1024M -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512M
       GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs="-Xmx3840m -XX:+HeapDumpOnOutOfMemoryError"'
@@ -41,20 +41,19 @@ jobs:
            mkdir -p ~/junit/
            mkdir -p ~/reports/
            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-           cp -R build/reports/tests ~/reports
+           cp -R springfox-javadoc/build/reports ~/reports
           when: always
       - store_test_results:
           path: ~/junit
-      - store_test_results:
-          path: ~/reports
       - store_artifacts:
-          path: ~/junit
+            path: ~/junit
       - store_artifacts:
-          path: ~/reports
+            path: ~/reports
       - deploy:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./gradlew artifactoryPublish -x check
+              cd springfox-javadoc
+              ../gradlew artifactoryPublish -x check
             fi
 notify:
   webhooks:

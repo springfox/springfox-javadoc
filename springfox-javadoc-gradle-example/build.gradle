@@ -1,0 +1,33 @@
+plugins {
+    id 'org.springframework.boot' version '2.1.3.RELEASE'
+}
+
+description = "springfox-javadoc-gradle-example"
+
+configurations {
+    springfoxDoclet
+}
+
+
+dependencies {
+    springfoxDoclet project(":springfox-javadoc")
+    implementation platform("org.springframework.boot:spring-boot-dependencies:2.1.3.RELEASE")
+    implementation("io.springfox:springfox-spring-webmvc:3.0.0-SNAPSHOT")
+    implementation("io.springfox:springfox-bean-validators:3.0.0-SNAPSHOT")
+    implementation("io.springfox:springfox-swagger-ui:3.0.0-SNAPSHOT")
+    implementation("io.springfox:springfox-swagger2:3.0.0-SNAPSHOT")
+    implementation project(":springfox-javadoc")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+}
+
+task generateSwaggerApiDocs(type: Javadoc) {
+    source = sourceSets.main.allJava
+    destinationDir = reporting.file("rest-api-docs")
+    options.doclet = "springfox.javadoc.doclet.SwaggerPropertiesDoclet"
+    options.docletpath = configurations.springfoxDoclet.files.asType(List)
+    options.classpath = configurations.runtimeClasspath.files.asType(List)
+    verbose = true
+}
+
+bootRun.dependsOn(generateSwaggerApiDocs)
+assemble.dependsOn(generateSwaggerApiDocs)
