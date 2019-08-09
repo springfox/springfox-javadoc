@@ -19,6 +19,7 @@
 package springfox.javadoc.doclet;
 
 import com.sun.javadoc.AnnotationDesc;
+import com.sun.javadoc.AnnotationValue;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.DocErrorReporter;
 import com.sun.javadoc.MethodDoc;
@@ -32,8 +33,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
+import static java.util.Collections.singletonList;
 import static springfox.javadoc.doclet.DocletOptionParser.*;
 
 // the NOSONAR comment is added to ignore sonar warning about usage of Sun classes
@@ -251,23 +255,26 @@ public class SwaggerPropertiesDoclet {
                 if (!path.substring(path.length() - 1).equals(".")) {
                     path.append(".");
                 }
-                String requestMethod = getRequestMethod(annotationDesc, annotationType, defaultRequestMethod);
-                if (requestMethod != null) {
-                    path.append(requestMethod);
-                    saveProperty(properties, path.toString() + ".notes", methodDoc.commentText());
+                for (String requestMethod : getRequestMethods(annotationDesc, annotationType, defaultRequestMethod)) {
+                    if (requestMethod != null) {
+                        String fullPath = path.toString() + requestMethod;
+                        saveProperty(properties, fullPath + ".notes", methodDoc.commentText());
 
-                    for (ParamTag paramTag : methodDoc.paramTags()) {
-                        saveProperty(properties, path.toString() + ".param." + paramTag.parameterName(),
-                          paramTag.parameterComment());
-                    }
-                    for (Tag tag : methodDoc.tags()) {
-                        if (tag.name().equals(RETURN)) {
-                            saveProperty(properties, path.toString() + ".return", tag.text());
-                            break;
+                        for (ParamTag paramTag : methodDoc.paramTags()) {
+                            saveProperty(
+                              properties,
+                              fullPath + ".param." + paramTag.parameterName(),
+                              paramTag.parameterComment());
                         }
-                    }
-                    if (exceptionRef) {
-                        processThrows(properties, methodDoc.throwsTags(), path);
+                        for (Tag tag : methodDoc.tags()) {
+                            if (tag.name().equals(RETURN)) {
+                                saveProperty(properties, fullPath + ".return", tag.text());
+                                break;
+                            }
+                        }
+                        if (exceptionRef) {
+                            processThrows(properties, methodDoc.throwsTags(), fullPath);
+                        }
                     }
                 }
             }
@@ -295,7 +302,7 @@ public class SwaggerPropertiesDoclet {
         return false;
     }
 
-    private static String getRequestMethod(
+    private static List<String> getRequestMethods(
       AnnotationDesc annotationDesc,
       String name,
       String defaultRequestMethod) {
@@ -303,44 +310,66 @@ public class SwaggerPropertiesDoclet {
         if (REQUEST_MAPPING.equals(name)) {
             for (AnnotationDesc.ElementValuePair pair : annotationDesc.elementValues()) {
                 if (METHOD.equals(pair.element().name())) {
-                    return resolveRequestMethod(pair, defaultRequestMethod);
+                    return resolveRequestMethods(pair, defaultRequestMethod);
                 }
             }
         } else if (PUT_MAPPING.equals(name)) {
-            return "PUT";
+            return singletonList("PUT");
         } else if (POST_MAPPING.equals(name)) {
-            return "POST";
+            return singletonList("POST");
         } else if (PATCH_MAPPING.equals(name)) {
-            return "PATCH";
+            return singletonList("PATCH");
         } else if (GET_MAPPING.equals(name)) {
-            return "GET";
+            return singletonList("GET");
         } else if (DELETE_MAPPING.equals(name)) {
-            return "DELETE";
+            return singletonList("DELETE");
         }
-        return defaultRequestMethod;
+        return singletonList(defaultRequestMethod);
     }
 
-    private static String resolveRequestMethod(
-      AnnotationDesc.ElementValuePair pair,
-      String defaultRequestMethod) {
+    private static List<String> resolveRequestMethods(
+      AnnotationDesc.ElementValuePair pair, String defaultRequestMethod) {
+        List<String> result = new ArrayList<String>();
+        AnnotationValue method = pair.value();
+        if (method.value().getClass().isArray()) {
+            for (Object val : (Object[]) method.value()) {
+                String value = getMethodName(val.toString());
+                if (value != null) {
+                    result.add(value);
+                }
+            }
+        } else {
+            String value = getMethodName(method.toString());
+            if (value != null) {
+                result.add(value);
+            }
+        }
+        if (result.isEmpty()) {
+            return singletonList(defaultRequestMethod);
+        }
+        return result;
 
-        String value = pair.value().toString();
+    }
+
+    /** Given a qualified request mapping, return the method name. */
+    private static String getMethodName(String requestMapping) {
         for (String[] each : REQUEST_MAPPINGS) {
-            if (each[0].equals(value)) {
+            if (each[0].equals(requestMapping)) {
                 return each[1];
             }
         }
-        return defaultRequestMethod;
+        return null;
     }
 
     private static void processThrows(
       Properties properties,
       ThrowsTag[] throwsTags,
-      StringBuilder path) {
+      String path) {
 
         for (int i = 0; i < throwsTags.length; i++) {
-            String key = path.toString() + ".throws." + i;
-            String value = throwsTags[i].exceptionType().typeName() + "-" + throwsTags[i].exceptionComment();
+            String key = path + ".throws." + i;
+            String value =
+              throwsTags[i].exceptionType().typeName() + "-" + throwsTags[i].exceptionComment();
             saveProperty(properties, key, value);
         }
     }
